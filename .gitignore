@@ -1,0 +1,4 @@
+cache/
+model/
+modules/__pycache__/
+save/
