@@ -53,12 +53,12 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-	"data": {
-		"user_name": "sbin",
-		"token": "87531baddff511ed8df938d547b88377"
-	},
-	"message": "success",
-	"code": 200
+  "data": {
+    "user_name": "sbin",
+    "token": "87531baddff511ed8df938d547b88377"
+  },
+  "message": "success",
+  "code": 200
 }
 ```
 
@@ -90,11 +90,11 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-	"data": {
-		"list": ["小红"]
-	},
-	"message": "success",
-	"code": 200
+  "data": {
+    "list": ["小红"]
+  },
+  "message": "success",
+  "code": 200
 }
 ```
 
@@ -127,14 +127,14 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-	"data": {
-		"user": "小蓝",
-		"bot": "小红",
-		"greeting": "小蓝，来和我一起玩吧。",
-		"bot_persona": "是一名年轻女性。爱好是看书、旅游。职业是服装设计师。喜欢吃生鱼片。敢爱敢恨，偶尔有些任性，喜欢帮助别人。印象最深的一件事是曾将一位晕倒的陌生女孩儿送去医院，结果发现这个女孩正是自己暗恋多年的男神的妹妹。"
-	},
-	"message": "success",
-	"code": 200
+  "data": {
+    "user": "小蓝",
+    "bot": "小红",
+    "greeting": "小蓝，来和我一起玩吧。",
+    "bot_persona": "是一名年轻女性。爱好是看书、旅游。职业是服装设计师。喜欢吃生鱼片。敢爱敢恨，偶尔有些任性，喜欢帮助别人。印象最深的一件事是曾将一位晕倒的陌生女孩儿送去医院，结果发现这个女孩正是自己暗恋多年的男神的妹妹。"
+  },
+  "message": "success",
+  "code": 200
 }
 ```
 
@@ -170,9 +170,9 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-	"data": null,
-	"message": "success",
-	"code": 200
+  "data": null,
+  "message": "success",
+  "code": 200
 }
 ```
 
@@ -205,11 +205,11 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-	"data": {
-		"reply": "小蓝，来和我一起玩吧。"
-	},
-	"message": "success",
-	"code": 200
+  "data": {
+    "reply": "小蓝，来和我一起玩吧。"
+  },
+  "message": "success",
+  "code": 200
 }
 ```
 
@@ -247,11 +247,11 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-	"data": {
-		"reply": "我有个好玩的想法，我们一起去参加一场冒险吧。"
-	},
-	"message": "success",
-	"code": 200
+  "data": {
+    "reply": "我有个好玩的想法，我们一起去参加一场冒险吧。"
+  },
+  "message": "success",
+  "code": 200
 }
 ```
 
@@ -288,11 +288,11 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-	"data": {
-		"reply": "小蓝，你有没有听说过那个网络红人？"
-	},
-	"message": "success",
-	"code": 200
+  "data": {
+    "reply": "小蓝，你有没有听说过那个网络红人？"
+  },
+  "message": "success",
+  "code": 200
 }
 ```
 
@@ -324,11 +324,11 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-	"data": {
-		"reply": "小蓝，来和我一起玩吧。"
-	},
-	"message": "success",
-	"code": 200
+  "data": {
+    "reply": "小蓝，来和我一起玩吧。"
+  },
+  "message": "success",
+  "code": 200
 }
 ```
 
@@ -360,12 +360,12 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-	"data": {
-		"token_count": 198,
-		"token_state": "小蓝: 你是小红，是一名年轻女性。爱好是看书、旅游。职业是服装设计师。喜欢吃生鱼片。敢爱敢恨，偶尔有些任性，喜欢帮助别人。印象最深的一件事是曾将一位晕倒的陌生女孩儿送去医院，结果发现这个女孩正是自己暗恋多年的男神的妹妹。小红称呼我为小蓝。\n\n小红: 小蓝，来和我一起玩吧。\n\n"
-	},
-	"message": "success",
-	"code": 200
+  "data": {
+    "token_count": 198,
+    "token_state": "小蓝: 你是小红，是一名年轻女性。爱好是看书、旅游。职业是服装设计师。喜欢吃生鱼片。敢爱敢恨，偶尔有些任性，喜欢帮助别人。印象最深的一件事是曾将一位晕倒的陌生女孩儿送去医院，结果发现这个女孩正是自己暗恋多年的男神的妹妹。小红称呼我为小蓝。\n\n小红: 小蓝，来和我一起玩吧。\n\n"
+  },
+  "message": "success",
+  "code": 200
 }
 ```
 
