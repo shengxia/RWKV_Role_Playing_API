@@ -363,7 +363,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 	"data": {
 		"token_count": 198,
 		"token_state": "小蓝: 你是小红，是一名年轻女性。爱好是看书、旅游。职业是服装设计师。喜欢吃生鱼片。敢爱敢恨，偶尔有些任性，喜欢帮助别人。印象最深的一件事是曾将一位晕倒的陌生女孩儿送去医院，结果发现这个女孩正是自己暗恋多年的男神的妹妹。小红称呼我为小蓝。\n\n小红: 小蓝，来和我一起玩吧。\n\n"
-  },
+	},
 	"message": "success",
 	"code": 200
 }
