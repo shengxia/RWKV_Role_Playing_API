@@ -31,7 +31,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ----------
 
-##1.用户登陆
+### 1.用户登陆
 >描述：想新增用户的话，可以在user目录下面新建一个以用户名命名的文件，没有扩展名，然后里面存放密码。
 
 ***URL***
@@ -69,7 +69,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-##2.获取角色列表
+### 2.获取角色列表
 
 ***URL***
 
@@ -105,7 +105,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-##3.获取角色详情
+### 3.获取角色详情
 
 ***URL***
 
@@ -145,7 +145,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-##4.创建/保存角色
+### 4.创建/保存角色
 
 ***URL***
 
@@ -183,7 +183,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-##5.加载角色
+### 5.加载角色
 
 ***URL***
 
@@ -220,7 +220,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-##6.对话
+### 6.对话
 
 ***URL***
 
@@ -262,7 +262,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-##7.重说
+### 7.重说
 
 ***URL***
 
@@ -303,7 +303,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-##8.重置
+### 8.重置
 
 ***URL***
 
@@ -339,7 +339,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-##9.调试
+### 9.调试
 
 ***URL***
 
