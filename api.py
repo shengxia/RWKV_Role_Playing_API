@@ -3,10 +3,10 @@ from flask import Flask
 from flask import g
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default="8888")
-parser.add_argument("--model", type=str, default="model/RWKV-4-Pile-169M-20220807-8023")
-# parser.add_argument("--model", type=str, default="model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20230418-ctx4096.pth")
+# parser.add_argument("--model", type=str, default="model/RWKV-4-Pile-169M-20220807-8023")
+parser.add_argument("--model", type=str, default="model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20230418-ctx4096")
 parser.add_argument("--strategy", type=str, default="cuda fp16i8")
-parser.add_argument("--cuda_on", type=str, default="1", help="RWKV_CUDA_ON value")
+parser.add_argument("--cuda_on", type=str, default="0", help="RWKV_CUDA_ON value")
 cmd_opts = parser.parse_args()
 
 import os

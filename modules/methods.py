@@ -75,7 +75,7 @@ def characters_save():
 @methods.route("/characters/load", methods=['post'])
 def characters_load():
   user_name = flask.request.values.get('user_name')
-  char_name = flask.request.values.get('char_name')
+  char_name = flask.request.values.get('character_name')
   if not char_name:
     return return_error('关键参数为空')
   char_path = f'./chars/{user_name}/{char_name}.json'
@@ -91,11 +91,11 @@ def characters_load():
   model_state = None
   init_prompt = f"{user}: 你是{bot}，{bot_persona}，{bot}称呼我为{user}。\n\n"
   if greeting:
-    init_prompt += f"{bot}: {greeting}\n\n{user}:"
+    init_prompt += f"{bot}: {greeting}"
   init_prompt = init_prompt.strip().split('\n')
   for c in range(len(init_prompt)):
     init_prompt[c] = init_prompt[c].strip().strip('\u3000').strip('\r')
-  init_prompt = '\n'.join(init_prompt).strip()
+  init_prompt = '\n'.join(init_prompt).strip() + '\n\n'
   out, model_tokens, model_state = model.run_rnn(model_tokens, model_state, model.pipeline.encode(init_prompt))
   model.save_all_stat(user_name, 'chat_init', out, model_tokens, model_state, char)
   if os.path.exists(f'save/{user_name}/{bot}.sav'):
@@ -116,7 +116,7 @@ def chat_reply():
   prompt = flask.request.values.get('prompt')
   top_p = flask.request.values.get('top_p', 0.6)
   top_k = flask.request.values.get('top_k', 0)
-  temperature = flask.request.values.get('temperature', 1.5)
+  temperature = flask.request.values.get('temperature', 1.8)
   presence_penalty = flask.request.values.get('presence_penalty', 0.2)
   frequency_penalty = flask.request.values.get('frequency_penalty', 0.2)
   if not prompt:
@@ -125,9 +125,9 @@ def chat_reply():
     out, model_tokens, model_state, role_info = model.load_all_stat(user_name, 'chat')
   except:
     return return_error('尚未加载角色')
-  model.save_all_stat(user_name, 'chat_pre', out, model_tokens, model_state, role_info)
-  new = f" {prompt}\n\n{role_info['bot']}:"
+  new = f"{role_info['user']}: {prompt}\n\n{role_info['bot']}:"
   out, model_tokens, model_state = model.run_rnn(model_tokens, model_state, model.pipeline.encode(new))
+  model.save_all_stat(user_name, 'chat_pre', out, model_tokens, model_state, role_info)
   chat_param = model.format_chat_param(top_p, top_k, temperature, presence_penalty, frequency_penalty)
   new_reply = gen_msg(out, chat_param, model_tokens, model_state, user_name, role_info)
   data = {
@@ -169,17 +169,19 @@ def chat_reset():
   }
   return return_success(data)
 
+# 调试
 @methods.route("/debug/token", methods=['post'])
 def debug_token():
   user_name = flask.request.values.get('user_name')
   state = model.load_all_stat(user_name, 'chat')
   data = {
-    'token_state': state[0]
+    'token_count': len(state[1]),
+    'token_state': model.pipeline.decode(state[1])
   }
   return return_success(data)
 
 def gen_msg(out, chat_param, model_tokens, model_state, user_name, role_info):
-  new_reply, out, model_tokens, model_state = model.get_reply(model_tokens, model_state, out, chat_param, role_info['user'])
+  new_reply, out, model_tokens, model_state = model.get_reply(model_tokens, model_state, out, chat_param)
   model.save_all_stat(user_name, 'chat', out, model_tokens, model_state, role_info)
   save_chat(user_name)
   return new_reply

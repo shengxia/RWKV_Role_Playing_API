@@ -11,6 +11,7 @@ class ModelUtils:
   model = None
   pipeline = None
   CHAT_LEN_LONG = 300
+  CHUNK_LEN = 100
   all_state = {}
   
   def __init__(self, args):
@@ -23,7 +24,9 @@ class ModelUtils:
   def run_rnn(self, model_tokens, model_state, tokens):
     tokens = [int(x) for x in tokens]
     model_tokens += tokens
-    out, model_state = self.model.forward(tokens, model_state)
+    while len(tokens) > 0:
+      out, model_state = self.model.forward(tokens[:self.CHUNK_LEN], model_state)
+      tokens = tokens[self.CHUNK_LEN:]
     return out, model_tokens, model_state
   
   def save_all_stat(self, srv, name, last_out, model_tokens, model_state, role_info):
@@ -41,7 +44,7 @@ class ModelUtils:
     role_info = copy.deepcopy(self.all_state[n]['role_info'])
     return self.all_state[n]['out'], model_tokens, model_state, role_info
   
-  def get_reply(self, model_tokens, model_state, out, chat_param, user):
+  def get_reply(self, model_tokens, model_state, out, chat_param):
     begin = len(model_tokens)
     out_last = begin
     occurrence = {}
@@ -58,8 +61,8 @@ class ModelUtils:
       if '\ufffd' not in xxx: # avoid utf-8 display issues
         out_last = begin + i + 1
       send_msg = self.pipeline.decode(model_tokens[begin:])
-      if send_msg.endswith(f'\n\n{user}:'):
-        send_msg = send_msg[:-len(f'\n\n{user}:')].strip()
+      if '\n\n' in send_msg:
+        send_msg = send_msg.strip()
         break
     return send_msg, out, model_tokens, model_state
   
