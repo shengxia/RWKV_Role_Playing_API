@@ -127,14 +127,18 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 
 ```json
 {
-  "data": {
-    "user": "小蓝",
-    "bot": "小红",
-    "greeting": "小蓝，来和我一起玩吧。",
-    "bot_persona": "是一名年轻女性。爱好是看书、旅游。职业是服装设计师。喜欢吃生鱼片。敢爱敢恨，偶尔有些任性，喜欢帮助别人。印象最深的一件事是曾将一位晕倒的陌生女孩儿送去医院，结果发现这个女孩正是自己暗恋多年的男神的妹妹。"
-  },
-  "message": "success",
-  "code": 200
+	"data": {
+		"user": "哥哥",
+		"bot": "小雪",
+		"action_start": "{",
+		"action_end": "}",
+		"greeting": "{看到你走了过来，欢快的向你跑了过来}哥哥，来和我聊聊天吧。",
+		"bot_persona": "你扮演小雪，是一个调皮可爱，美丽性感的女孩，是我的邻居。",
+		"example_message": "<user>: 我们来聊聊天吧。\n\n<bot>: {点了点头，微笑着看着你}好啊，<user>，我们聊点什么呢？\n\n<user>: 聊一些关于你的话题吧。\n\n<bot>: {心里非常高兴，但表面上还是保持着微笑}关于我的话题？<user>~你想要知道我的哪些事情呢？\n\n<user>:  我想知道你喜欢的人是谁。\n\n<bot>: {稍微愣了一下，随即露出了甜美的笑容}<user>~你问这个问题是不是很奇怪呀，你已经知道我喜欢的人是谁了。\n\n<user>:  是吗？我怎么不知道呢？\n\n<bot>: {心里有些失望，但仍然微笑着看着你}那好吧，我的答案是：我喜欢的人就是<user>啊，你虽然不像别人那样能力很强，但是却有着一颗温柔而善良的心，而且非常关心我。",
+		"use_qa": false
+	},
+	"message": "success",
+	"code": 200
 }
 ```
 
@@ -160,11 +164,16 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |参数|必须|说明|取值|
 |:--:|:--:|:--:|:--:|
 | user_name | 是 | 用户名 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
+| bot_save_name | 否 | 角色保存名称 | String |
 | bot | 是 | 角色名称 | String |  
 | user | 是 | 角色如何称呼用户 | String |
+| action_start | 否 | 旁白开始符号 | String |
+| action_end | 否 | 旁白结束符号 | String |
 | greeting | 是 | 角色的开场白 | String |
 | bot_persona | 是 | 角色的性格 | String |
+| example_message | 否 | 示例对话 | String |
+| use_qa | 否 | 是否使用User和Assistant代替你和角色的名字，默认为否(False) | Boolen |
+| token | 是 | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
@@ -183,7 +192,42 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-### 5.加载角色
+### 5.删除角色
+
+***URL***
+
+`/characters/del`
+
+***Method***
+
+`POST`
+
+***Param***
+
+|参数|必须|说明|取值|
+|:--:|:--:|:--:|:--:|
+| user_name | 是 | 用户名 | String |
+| character_name | 否 | 角色保存名称 | String |
+| token | 是 | 令牌，从登录接口中获取 | String |
+
+***Return Example***
+
+```json
+{
+  "data": null,
+  "message": "success",
+  "code": 200
+}
+```
+
+***Code***
+
+|状态码|说明|
+|:--:|:--:|
+|200|请求成功|
+|400|错误|
+
+### 6.加载角色
 
 ***URL***
 
@@ -198,18 +242,20 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |参数|必须|说明|取值|
 |:--:|:--:|:--:|:--:|
 | user_name | 是 | 用户名 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
 | character_name | 是 | 角色名称 | String |  
+| token | 是 | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
 ```json
 {
-  "data": {
-    "reply": "小蓝，来和我一起玩吧。"
-  },
-  "message": "success",
-  "code": 200
+	"data": {
+		"chat": [
+			[null, "{看到你走了过来，欢快的向你跑了过来}哥哥，来和我聊聊天吧。"]
+		]
+	},
+	"message": "success",
+	"code": 200
 }
 ```
 
@@ -220,7 +266,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-### 6.对话
+### 7.对话
 
 ***URL***
 
@@ -235,13 +281,14 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |参数|必须|说明|取值|
 |:--:|:--:|:--:|:--:|
 | user_name | 是 | 用户名 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
+| character_name | 是 | 角色名称 | String |
 | prompt | 是 | 用户输入的内容 | String |  
-| top_p | 否 | top_p值，默认为0.6 | Number |  
-| top_k | 否 | top_k值，默认为0 | Number |  
-| temperature | 否 | temperature值，默认为1.8 | Number |  
+| min_len | 否 | 最小回复长度，0为不控制，默认是0 | Number |  
+| top_p | 否 | top_p值，默认为0.65 | Number |  
+| temperature | 否 | temperature值，默认为2 | Number |  
 | presence_penalty | 否 | presence_penalty值，默认为0.2 | Number |  
 | frequency_penalty | 否 | frequency_penalty值，默认为0.2 | Number |  
+| token | 是 | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
@@ -262,7 +309,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-### 7.重说
+### 8.重说
 
 ***URL***
 
@@ -277,12 +324,13 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |参数|必须|说明|取值|
 |:--:|:--:|:--:|:--:|
 | user_name | 是 | 用户名 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
+| character_name | 是 | 角色名称 | String |
+| min_len | 否 | 最小回复长度，0为不控制，默认是0 | Number |  
 | top_p | 否 | top_p值，默认为0.6 | Number |  
-| top_k | 否 | top_k值，默认为0 | Number |  
 | temperature | 否 | temperature值，默认为1.8 | Number |  
 | presence_penalty | 否 | presence_penalty值，默认为0.2 | Number |  
 | frequency_penalty | 否 | frequency_penalty值，默认为0.2 | Number |  
+| token | 是 | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
@@ -303,7 +351,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |200|请求成功|
 |400|错误|
 
-### 8.重置
+### 9.重置
 
 ***URL***
 
@@ -318,17 +366,20 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |参数|必须|说明|取值|
 |:--:|:--:|:--:|:--:|
 | user_name | 是 | 用户名 | String |
+| character_name | 是 | 角色名称 | String |
 | token | 是 | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
 ```json
 {
-  "data": {
-    "reply": "小蓝，来和我一起玩吧。"
-  },
-  "message": "success",
-  "code": 200
+	"data": {
+		"chat": [
+			[null, "{看到你走了过来，欢快的向你跑了过来}哥哥，来和我聊聊天吧。"]
+		]
+	},
+	"message": "success",
+	"code": 200
 }
 ```
 

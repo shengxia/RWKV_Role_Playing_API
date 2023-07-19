@@ -3,6 +3,8 @@ import os
 from modules.common import return_error, return_success, model
 import json
 import pickle
+from modules.role_info import RoleInfo
+import uuid, copy
 
 methods = flask.Blueprint('methods', __name__)
 
@@ -55,20 +57,48 @@ def characters_get():
 @methods.route("/characters/save", methods=['post'])
 def characters_save():
   user_name = flask.request.values.get('user_name')
+  bot_save_name = flask.request.values.get('bot_save_name')
   user = flask.request.values.get('user')
   bot = flask.request.values.get('bot')
+  action_start = flask.request.values.get('action_start')
+  action_end = flask.request.values.get('action_end')
   greeting = flask.request.values.get('greeting')
   bot_persona = flask.request.values.get('bot_persona')
+  example_message = flask.request.values.get('example_message')
+  use_qa = flask.request.values.get('use_qa', False)
   if not user or not bot or not greeting or not bot_persona:
     return return_error('缺少关键参数')
-  with open(f"./chars/{user_name}/{bot}.json", 'w', encoding='utf8') as f:
+  bot_name = bot if not bot_save_name else bot_save_name
+  with open(f"./chars/{user_name}/{bot_name}.json", 'w', encoding='utf8') as f:
     data = {
       'user': user, 
       'bot': bot, 
+      'action_start': action_start,
+      'action_end': action_end,
       'greeting': greeting, 
-      'bot_persona': bot_persona
+      'bot_persona': bot_persona,
+      'example_message': example_message,
+      'use_qa': use_qa
     }
     json.dump(data, f, indent=2, ensure_ascii=False)
+  return return_success()
+
+# 删除角色
+@methods.route("/characters/del", methods=['post'])
+def characters_delete():
+  user_name = flask.request.values.get('user_name')
+  char_name = flask.request.values.get('character_name')
+  if not user_name or not char_name:
+    return return_error('缺少关键参数')
+  json_path = f"chars/{user_name}/{char_name}.json"
+  pic_path = f"chars/{user_name}/{char_name}.png"
+  sav_path = f"save/{user_name}/{char_name}.sav"
+  if os.path.exists(json_path):
+    os.remove(json_path)
+  if os.path.exists(pic_path):
+    os.remove(pic_path)
+  if os.path.exists(sav_path):
+    os.remove(sav_path)
   return return_success()
 
 # 加载角色
@@ -78,58 +108,67 @@ def characters_load():
   char_name = flask.request.values.get('character_name')
   if not char_name:
     return return_error('关键参数为空')
+  role_info = init_chat(user_name, char_name)
+  data = {
+    'chat': role_info.chatbot
+  }
+  return return_success(data)
+
+def init_chat(user_name, char_name):
   char_path = f'./chars/{user_name}/{char_name}.json'
   if not os.path.exists(char_path):
     return return_error('角色不存在')
   with open(char_path, 'r', encoding='utf-8') as f:
     char = json.loads(f.read())
-  user = char['user']
-  bot = char['bot']
-  bot_persona = char['bot_persona']
+  role_info = RoleInfo([], char['user'], char['bot'], char['action_start'], char['action_end'], 
+                       char['greeting'], char['use_qa'], str(uuid.uuid1()).replace('-', ''))
   greeting = char['greeting']
   model_tokens = []
   model_state = None
-  init_prompt = f"{user}: 你是{bot}，{bot_persona}，{bot}称呼我为{user}。\n\n"
-  if greeting:
-    init_prompt += f"{bot}: {greeting}"
+  init_prompt = get_init_prompt(role_info, char['bot'], char['bot_persona'], char['user'], char['example_message'])
   init_prompt = init_prompt.strip().split('\n')
   for c in range(len(init_prompt)):
     init_prompt[c] = init_prompt[c].strip().strip('\u3000').strip('\r')
   init_prompt = '\n'.join(init_prompt).strip() + '\n\n'
-  out, model_tokens, model_state = model.run_rnn(model_tokens, model_state, model.pipeline.encode(init_prompt))
-  model.save_all_stat(user_name, 'chat_init', out, model_tokens, model_state, char)
-  if os.path.exists(f'save/{user_name}/{bot}.sav'):
-    save_data = load_chat(user_name, bot)
-    model.save_all_stat(user_name, 'chat', save_data['out'], save_data['model_tokens'], save_data['model_state'], save_data['role_info'])
-    model.save_all_stat(user_name, 'chat_pre', save_data['out_pre'], save_data['model_tokens_pre'], save_data['model_state_pre'], save_data['role_info'])
+  init_prompt = init_prompt.strip().split('\n')
+  for c in range(len(init_prompt)):
+    init_prompt[c] = init_prompt[c].strip().strip('\u3000').strip('\r')
+  init_prompt = '\n'.join(init_prompt).strip() + '\n\n'
+  if greeting:
+    init_prompt += f"{role_info.bot}: {greeting}\n\n"
+    role_info.chatbot = [[None, greeting]]
+  if not os.path.exists(f"save/{user_name}/{char['bot']}.sav"):
+    out, model_tokens, model_state = model.run_rnn(model_tokens, model_state, model.pipeline.encode(init_prompt))
+    save_state(user_name, role_info, out, model_tokens, model_state)
   else:
-    model.save_all_stat(user_name, 'chat', out, model_tokens, model_state, char)
-  data = {
-    'reply': greeting
-  }
-  return return_success(data)
+    save_data = load_state(user_name, role_info.bot)
+    role_info = save_data['role_info']
+  return role_info
 
 # 对话
 @methods.route("/chat/reply", methods=['post'])
 def chat_reply():
   user_name = flask.request.values.get('user_name')
+  char_name = flask.request.values.get('character_name')
   prompt = flask.request.values.get('prompt')
-  top_p = flask.request.values.get('top_p', 0.6)
-  top_k = flask.request.values.get('top_k', 0)
-  temperature = flask.request.values.get('temperature', 1.8)
+  min_len = flask.request.values.get('min_len', 0)
+  top_p = flask.request.values.get('top_p', 0.65)
+  temperature = flask.request.values.get('temperature', 2)
   presence_penalty = flask.request.values.get('presence_penalty', 0.2)
   frequency_penalty = flask.request.values.get('frequency_penalty', 0.2)
-  if not prompt:
+  if not user_name or not prompt or not char_name:
     return return_error('关键参数为空')
-  try:
-    out, model_tokens, model_state, role_info = model.load_all_stat(user_name, 'chat')
-  except:
+  save_data = load_state(user_name, char_name)
+  if not save_data:
     return return_error('尚未加载角色')
-  new = f"{role_info['user']}: {prompt}\n\n{role_info['bot']}:"
-  out, model_tokens, model_state = model.run_rnn(model_tokens, model_state, model.pipeline.encode(new))
-  model.save_all_stat(user_name, 'chat_pre', out, model_tokens, model_state, role_info)
-  chat_param = model.format_chat_param(top_p, top_k, temperature, presence_penalty, frequency_penalty)
-  new_reply = gen_msg(out, chat_param, model_tokens, model_state, user_name, role_info)
+  role_info = save_data['role_info']
+  new = f"{role_info.user}: {prompt}\n\n{role_info.bot}:"
+  out_pre, model_tokens_pre, model_state_pre = model.run_rnn(save_data['model_tokens'], save_data['model_state'], model.pipeline.encode(new))
+  role_info.chatbot += [[prompt, None]]
+  chat_param = model.format_chat_param(top_p, temperature, presence_penalty, frequency_penalty,
+                                       min_len, role_info.action_start_token, role_info.action_end_token)
+  occurrence = get_occurrence(role_info)
+  new_reply = gen_msg(chat_param, out_pre, model_tokens_pre, model_state_pre, user_name, role_info, occurrence)
   data = {
     'reply': new_reply
   }
@@ -139,17 +178,22 @@ def chat_reply():
 @methods.route("/chat/resay", methods=['post'])
 def chat_resay():
   user_name = flask.request.values.get('user_name')
-  top_p = flask.request.values.get('top_p', 0.6)
-  top_k = flask.request.values.get('top_k', 0)
-  temperature = flask.request.values.get('temperature', 1.5)
+  char_name = flask.request.values.get('character_name')
+  min_len = flask.request.values.get('min_len', 0)
+  top_p = flask.request.values.get('top_p', 0.65)
+  temperature = flask.request.values.get('temperature', 2)
   presence_penalty = flask.request.values.get('presence_penalty', 0.2)
   frequency_penalty = flask.request.values.get('frequency_penalty', 0.2)
-  try:
-    out, model_tokens, model_state, role_info = model.load_all_stat(user_name, 'chat_pre')
-  except:
+  save_data = load_state(user_name, char_name)
+  if not save_data:
+    return return_error('尚未加载角色')
+  if not save_data['model_tokens_pre']:
     return return_error('尚未开始对话')
-  chat_param = model.format_chat_param(top_p, top_k, temperature, presence_penalty, frequency_penalty)
-  new_reply = gen_msg(out, chat_param, model_tokens, model_state, user_name, role_info) 
+  role_info = save_data['role_info']
+  chat_param = model.format_chat_param(top_p, temperature, presence_penalty, frequency_penalty,
+                                       min_len, role_info.action_start_token, role_info.action_end_token)
+  occurrence = get_occurrence(role_info, True)
+  new_reply = gen_msg(chat_param, save_data['out_pre'], save_data['model_tokens_pre'], save_data['model_state_pre'], user_name, role_info, occurrence) 
   data = {
     'reply': new_reply
   }
@@ -159,13 +203,13 @@ def chat_resay():
 @methods.route("/chat/reset", methods=['post'])
 def chat_reset():
   user_name = flask.request.values.get('user_name')
-  out, model_tokens, model_state, role_info = model.load_all_stat(user_name, 'chat_init')
-  model.save_all_stat(user_name, 'chat', out, model_tokens, model_state, role_info)
-  save_file = f"save/{user_name}/{role_info['bot']}.sav"
+  char_name = flask.request.values.get('character_name')
+  save_file = f"save/{user_name}/{char_name}.sav"
   if os.path.exists(save_file):
     os.remove(save_file)
+  role_info = init_chat(user_name, char_name)
   data = {
-    'reply': role_info['greeting']
+    'chat': role_info.chatbot
   }
   return return_success(data)
 
@@ -173,23 +217,44 @@ def chat_reset():
 @methods.route("/debug/token", methods=['post'])
 def debug_token():
   user_name = flask.request.values.get('user_name')
-  state = model.load_all_stat(user_name, 'chat')
+  char_name = flask.request.values.get('character_name')
+  save_data = load_state(user_name, char_name)
+  if not save_data:
+    return return_error('尚未开始对话')
   data = {
-    'token_count': len(state[1]),
-    'token_state': model.pipeline.decode(state[1])
+    'token_count': len(save_data['model_tokens']),
+    'token_state': model.pipeline.decode(save_data['model_tokens'])
   }
   return return_success(data)
 
-def gen_msg(out, chat_param, model_tokens, model_state, user_name, role_info):
-  new_reply, out, model_tokens, model_state = model.get_reply(model_tokens, model_state, out, chat_param)
-  model.save_all_stat(user_name, 'chat', out, model_tokens, model_state, role_info)
-  save_chat(user_name)
+def gen_msg(chat_param, out_pre, model_tokens_pre, model_state_pre, user_name, role_info:RoleInfo, occurrence):
+  c_model_tokens_pre = copy.deepcopy(model_tokens_pre)
+  c_model_state_pre = copy.deepcopy(model_state_pre)
+  new_reply, out, model_tokens, model_state = model.get_reply(model_tokens_pre, model_state_pre, out_pre, chat_param, occurrence)
+  role_info.chatbot[-1][1] = new_reply
+  save_state(user_name, role_info, out, model_tokens, model_state, out_pre, c_model_tokens_pre, c_model_state_pre)
+  save_log(user_name, role_info)
   return new_reply
 
-def save_chat(user_name):
+def get_init_prompt(role_info:RoleInfo, bot:str, bot_persona:str, user:str, example_message:str):
+  if role_info.action_start and role_info.action_start in example_message and role_info.action_end in example_message:
+    role_info.action_start_token = model.pipeline.encode(f' {role_info.action_start}')
+    role_info.action_end_token = model.pipeline.encode(role_info.action_end)
+  else:
+    role_info.action_start_token = None
+    role_info.action_end_token = None
+  em = example_message.replace('<bot>', bot).replace('<user>', user)
+  init_prompt = f"阅读并理解以下{user}和{bot}之间的对话："
+  init_prompt_part2 = f"根据以下描述来扮演{bot}和{user}对话，在对话中加入描述角色的感情、想法、身体动作等内容，也可以加入对环境、场面或动作产生结果的描述，以此来促进对话的进展，这些描述要合理且文采斐然。\n"
+  if em:
+    init_prompt += f'\n\n{em}\n\n{init_prompt_part2}'
+  else:
+    init_prompt = f'{init_prompt_part2}'
+  init_prompt += f"{bot_persona}"
+  return init_prompt
+
+def save_state(user_name, role_info:RoleInfo, out, model_tokens, model_state, out_pre=None, model_tokens_pre=None, model_state_pre=None):
   os.makedirs(f'save/{user_name}', exist_ok=True)
-  out, model_tokens, model_state, role_info = model.load_all_stat(user_name, 'chat')
-  out_pre, model_tokens_pre, model_state_pre, role_info_pre = model.load_all_stat(user_name, 'chat_pre')
   data = {
     "out": out,
     "model_tokens": model_tokens,
@@ -199,10 +264,34 @@ def save_chat(user_name):
     "model_state_pre": model_state_pre,
     "role_info": role_info
   }
-  with open(f"save/{user_name}/{role_info_pre['bot']}.sav", 'wb') as f:
+  with open(f"save/{user_name}/{role_info.bot_chat}.sav", 'wb') as f:
     pickle.dump(data, f)
 
-def load_chat(user_name, bot):
-  with open(f'save/{user_name}/{bot}.sav', 'rb') as f:
+def load_state(user_name, char_name):
+  if not os.path.exists(f'save/{user_name}/{char_name}.sav'):
+    return False
+  with open(f'save/{user_name}/{char_name}.sav', 'rb') as f:
     data = pickle.load(f)
   return data
+
+def get_occurrence(role_info:RoleInfo, is_pre=False):
+  chatbot = role_info.chatbot
+  if len(chatbot) > 3:
+    chatbot = chatbot[-3:]
+  if is_pre:
+    chatbot = chatbot[:-1]
+  occurrence = {}
+  for i in chatbot:
+    if i[1]:
+      bot_token = model.pipeline.encode(i[1])
+      for t in bot_token:
+        for o in occurrence:
+          occurrence[o] *= model.penalty_decay
+        occurrence[t] = 1 + (occurrence[t] if t in occurrence else 0)
+  return occurrence
+
+def save_log(user_name, role_info:RoleInfo):
+  os.makedirs(f'log/{user_name}/{role_info.bot_chat}/', exist_ok=True)
+  dict_list = [{'input': q, 'output': a} for q, a in role_info.chatbot]
+  with open(f'log/{user_name}/{role_info.bot_chat}/{role_info.log_hash}.json', 'w', encoding='utf-8') as f:
+    json.dump(dict_list, f, ensure_ascii=False, indent=2)
