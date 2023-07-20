@@ -2,7 +2,11 @@
 
 因为这个项目引入了用户的概念，所以可以支持多用户，我把生成的状态保存在了硬盘上，这样应该是可以及时释放内存和显存，不至于人一多就爆显存了吧……
 
-有个简单的前端演示项目https://github.com/shengxia/RWKV_Role_Playing_UI，感兴趣的话可以看看，使用Vue.js和Mint-UI做的。
+有个简单的前端演示项目
+
+https://github.com/shengxia/RWKV_Role_Playing_UI
+
+感兴趣的话可以看看，使用Vue.js和Mint-UI做的。
 
 ### 安装方法：
 
