@@ -1,5 +1,6 @@
 import argparse
 from flask import Flask
+from flask_cors import CORS
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default="8888")
 parser.add_argument("--model", type=str, default="model/fp16i8-RWKV-4-World-CHNtuned-7B-v1-20230709-ctx4096")
@@ -21,6 +22,7 @@ from modules.login import user_login
 api = Flask(__name__) 
 api.register_blueprint(methods)
 api.register_blueprint(user_login)
+CORS(api)
 
 if __name__ == "__main__":
   api.run(port=cmd_opts.port, host='0.0.0.0')

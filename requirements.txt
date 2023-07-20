@@ -1,6 +1,7 @@
 tokenizers>=0.13.2
 prompt_toolkit
 flask
+flask-cors
 ninja
 rwkv
 numpy

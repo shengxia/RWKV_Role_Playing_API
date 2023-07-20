@@ -87,11 +87,11 @@ class ModelUtils:
   
   def format_chat_param(self, top_p, temperature, presence_penalty, frequency_penalty, min_len=0, action_start_token=None, action_end_token=None):
     chat_param = {
-      'top_p': top_p,
-      'temperature': temperature,
-      'presence_penalty': presence_penalty,
-      'frequency_penalty': frequency_penalty,
-      'min_len': min_len,
+      'top_p': float(top_p),
+      'temperature': float(temperature),
+      'presence_penalty': float(presence_penalty),
+      'frequency_penalty': float(frequency_penalty),
+      'min_len': int(min_len),
       'action_start_token': action_start_token,
       'action_end_token': action_end_token,
     }

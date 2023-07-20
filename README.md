@@ -1,5 +1,9 @@
 ## 一个基于Flask实现的RWKV角色扮演API
 
+因为这个项目引入了用户的概念，所以可以支持多用户，我把生成的状态保存在了硬盘上，这样应该是可以及时释放内存和显存，不至于人一多就爆显存了吧……
+
+有个简单的前端演示项目https://github.com/shengxia/RWKV_Role_Playing_UI，感兴趣的话可以看看，使用Vue.js和Mint-UI做的。
+
 ### 安装方法：
 
 先安装依赖
@@ -135,7 +139,8 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 		"greeting": "{看到你走了过来，欢快的向你跑了过来}哥哥，来和我聊聊天吧。",
 		"bot_persona": "你扮演小雪，是一个调皮可爱，美丽性感的女孩，是我的邻居。",
 		"example_message": "<user>: 我们来聊聊天吧。\n\n<bot>: {点了点头，微笑着看着你}好啊，<user>，我们聊点什么呢？\n\n<user>: 聊一些关于你的话题吧。\n\n<bot>: {心里非常高兴，但表面上还是保持着微笑}关于我的话题？<user>~你想要知道我的哪些事情呢？\n\n<user>:  我想知道你喜欢的人是谁。\n\n<bot>: {稍微愣了一下，随即露出了甜美的笑容}<user>~你问这个问题是不是很奇怪呀，你已经知道我喜欢的人是谁了。\n\n<user>:  是吗？我怎么不知道呢？\n\n<bot>: {心里有些失望，但仍然微笑着看着你}那好吧，我的答案是：我喜欢的人就是<user>啊，你虽然不像别人那样能力很强，但是却有着一颗温柔而善良的心，而且非常关心我。",
-		"use_qa": false
+		"use_qa": false,
+    "avatar": ""
 	},
 	"message": "success",
 	"code": 200
@@ -164,7 +169,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |参数|必须|说明|取值|
 |:--:|:--:|:--:|:--:|
 | user_name | 是 | 用户名 | String |
-| bot_save_name | 否 | 角色保存名称 | String |
+| bot_save_name | 否 | 角色保存名称，如果为空，则使用角色名称来保存角色 | String |
 | bot | 是 | 角色名称 | String |  
 | user | 是 | 角色如何称呼用户 | String |
 | action_start | 否 | 旁白开始符号 | String |
@@ -173,6 +178,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 | bot_persona | 是 | 角色的性格 | String |
 | example_message | 否 | 示例对话 | String |
 | use_qa | 否 | 是否使用User和Assistant代替你和角色的名字，默认为否(False) | Boolen |
+| avatar | 否 | 角色形象，图片经过base64编码后的字符串| String |
 | token | 是 | 令牌，从登录接口中获取 | String |
 
 ***Return Example***

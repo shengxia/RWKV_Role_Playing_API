@@ -28,14 +28,21 @@ def before():
 def characters_list():
   user_name = flask.request.values.get('user_name')
   path = f'./chars/{user_name}/'
-  files=os.listdir(path)
-  file_list = []
+  files = os.listdir(path)
+  char_list = []
   for f in files:
     file_name_arr = f.split('.')
     if file_name_arr[-1] == 'json':
-      file_list.append(file_name_arr[0])
+      with open(path + f, 'r', encoding='utf-8') as char_file:
+        char = json.loads(char_file.read())
+        tmp = {
+          'char_name': char['bot'],
+          'file_name': f,
+          'avatar': char['avatar']
+        }
+        char_list.append(tmp)
   data = {
-    'list': file_list
+    'list': char_list
   }
   return return_success(data)
 
@@ -66,10 +73,15 @@ def characters_save():
   bot_persona = flask.request.values.get('bot_persona')
   example_message = flask.request.values.get('example_message')
   use_qa = flask.request.values.get('use_qa', False)
+  avatar = flask.request.values.get('avatar')
   if not user or not bot or not greeting or not bot_persona:
     return return_error('缺少关键参数')
   bot_name = bot if not bot_save_name else bot_save_name
   with open(f"./chars/{user_name}/{bot_name}.json", 'w', encoding='utf8') as f:
+    if not use_qa or use_qa.lower() == 'false':
+      use_qa = False
+    else:
+      use_qa = True
     data = {
       'user': user, 
       'bot': bot, 
@@ -78,7 +90,8 @@ def characters_save():
       'greeting': greeting, 
       'bot_persona': bot_persona,
       'example_message': example_message,
-      'use_qa': use_qa
+      'use_qa': use_qa,
+      'avatar': avatar
     }
     json.dump(data, f, indent=2, ensure_ascii=False)
   return return_success()
