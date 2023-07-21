@@ -24,7 +24,7 @@ python api.py --listen --model model/path
 
 以下是一个例子: 
 ```
-python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20230418-ctx4096
+python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx4096
 ```
 各种启动参数解释如下：
 
@@ -173,7 +173,6 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |参数|必须|说明|取值|
 |:--:|:--:|:--:|:--:|
 | user_name | 是 | 用户名 | String |
-| bot_save_name | 否 | 角色保存名称，如果为空，则使用角色名称来保存角色 | String |
 | bot | 是 | 角色名称 | String |  
 | user | 是 | 角色如何称呼用户 | String |
 | action_start | 否 | 旁白开始符号 | String |
@@ -181,8 +180,8 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 | greeting | 是 | 角色的开场白 | String |
 | bot_persona | 是 | 角色的性格 | String |
 | example_message | 否 | 示例对话 | String |
-| use_qa | 否 | 是否使用User和Assistant代替你和角色的名字，默认为否(False) | Boolen |
-| avatar | 否 | 角色形象，图片经过base64编码后的字符串| String |
+| use_qa | 否 | 是否使用User和Assistant代替你和角色的名字，默认为否(False)，但是建议在使用的时候，如果想设置为否，直接传空字符串 | Boolen |
+| avatar | 否 | 角色形象，图片经过base64编码后的字符串 | String |
 | token | 是 | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
@@ -415,6 +414,7 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
 |参数|必须|说明|取值|
 |:--:|:--:|:--:|:--:|
 | user_name | 是 | 用户名 | String |
+| character_name | 是 | 角色名称 | String |
 | token | 是 | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
@@ -425,6 +425,78 @@ python api.py --listen --model model/fp16i8_RWKV-4-Raven-7B-v9x-Eng49-Other1%-20
     "token_count": 198,
     "token_state": "小蓝: 你是小红，是一名年轻女性。爱好是看书、旅游。职业是服装设计师。喜欢吃生鱼片。敢爱敢恨，偶尔有些任性，喜欢帮助别人。印象最深的一件事是曾将一位晕倒的陌生女孩儿送去医院，结果发现这个女孩正是自己暗恋多年的男神的妹妹。小红称呼我为小蓝。\n\n小红: 小蓝，来和我一起玩吧。\n\n"
   },
+  "message": "success",
+  "code": 200
+}
+```
+
+***Code***
+
+|状态码|说明|
+|:--:|:--:|
+|200|请求成功|
+|400|错误|
+
+### 10.回溯对话
+
+***URL***
+
+`/chat/back`
+
+***Method***
+
+`POST`
+
+***Param***
+
+|参数|必须|说明|取值|
+|:--:|:--:|:--:|:--:|
+| user_name | 是 | 用户名 | String |
+| character_name | 是 | 角色名称 | String |
+| log_index | 否 | 回溯对话的节点，用户和角色进行一次对话（用户和角色各说了一条）视为一个节点，角色的开场白（该组对话没有用户的发言，这个节点值通常是0）也算是一个节点，节点从0开始，比如和某个角色进行了三组对话，我想回溯到第二组，那么这个值是1，如果不传这个参数，那么程序会取默认值为0 | Number |
+| token | 是 | 令牌，从登录接口中获取 | String |
+
+***Return Example***
+
+```json
+{
+  "data": null,
+  "message": "success",
+  "code": 200
+}
+```
+
+***Code***
+
+|状态码|说明|
+|:--:|:--:|
+|200|请求成功|
+|400|错误|
+
+### 11.替角色说
+
+***URL***
+
+`/chat/tamper`
+
+***Method***
+
+`POST`
+
+***Param***
+
+|参数|必须|说明|取值|
+|:--:|:--:|:--:|:--:|
+| user_name | 是 | 用户名 | String |
+| character_name | 是 | 角色名称 | String |
+| message | 是 | 要替角色说的话 | String |
+| token | 是 | 令牌，从登录接口中获取 | String |
+
+***Return Example***
+
+```json
+{
+  "data": null,
   "message": "success",
   "code": 200
 }

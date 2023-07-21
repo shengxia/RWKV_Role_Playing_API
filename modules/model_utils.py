@@ -62,7 +62,7 @@ class ModelUtils:
     begin = len(model_tokens)
     out_last = begin
     for i in range(999):
-      if i == 0 and chat_param['action_start_token']:
+      if i == 1 and chat_param['action_start_token']:
         out[chat_param['action_start_token']] = 10
       if chat_param['min_len'] >0 and i < chat_param['min_len']:
         out[self.CHN_PERIOD_END] = self.NEG_INF
@@ -87,11 +87,11 @@ class ModelUtils:
   
   def format_chat_param(self, top_p, temperature, presence_penalty, frequency_penalty, min_len=0, action_start_token=None, action_end_token=None):
     chat_param = {
-      'top_p': float(top_p),
-      'temperature': float(temperature),
-      'presence_penalty': float(presence_penalty),
-      'frequency_penalty': float(frequency_penalty),
-      'min_len': int(min_len),
+      'top_p': top_p,
+      'temperature': temperature,
+      'presence_penalty': presence_penalty,
+      'frequency_penalty': frequency_penalty,
+      'min_len': min_len,
       'action_start_token': action_start_token,
       'action_end_token': action_end_token,
     }
