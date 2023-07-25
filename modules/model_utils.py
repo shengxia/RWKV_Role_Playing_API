@@ -42,27 +42,12 @@ class ModelUtils:
       out[model_tokens[-1]] = self.NEG_INF
     return out, model_tokens, model_state
   
-  def save_all_stat(self, srv, name, last_out, model_tokens, model_state, role_info):
-    n = f'{name}_{srv}'
-    self.all_state[n] = {}
-    self.all_state[n]['out'] = last_out
-    self.all_state[n]['rnn'] = copy.deepcopy(model_state)
-    self.all_state[n]['token'] = copy.deepcopy(model_tokens)
-    self.all_state[n]['role_info'] = copy.deepcopy(role_info)
-
-  def load_all_stat(self, srv, name):
-    n = f'{name}_{srv}'
-    model_state = copy.deepcopy(self.all_state[n]['rnn'])
-    model_tokens = copy.deepcopy(self.all_state[n]['token'])
-    role_info = copy.deepcopy(self.all_state[n]['role_info'])
-    return self.all_state[n]['out'], model_tokens, model_state, role_info
-  
   def get_reply(self, model_tokens, model_state, out, chat_param, occurrence={}):
     self.clear_cache()
     begin = len(model_tokens)
     out_last = begin
     for i in range(999):
-      if i == 1 and chat_param['action_start_token']:
+      if i == 0 and chat_param['action_start_token']:
         out[chat_param['action_start_token']] = 10
       if chat_param['min_len'] >0 and i < chat_param['min_len']:
         out[self.CHN_PERIOD_END] = self.NEG_INF

@@ -91,6 +91,9 @@ def characters_save():
   sav_path = f"save/{user_name}/{bot}.sav"
   if os.path.exists(sav_path):
     os.remove(sav_path)
+  save_file = f'chars/{user_name}/init_state/{bot}.sav'
+  if os.path.exists(save_file):
+    os.remove(save_file)
   return return_success()
 
 # 删除角色
@@ -106,6 +109,9 @@ def characters_delete():
     os.remove(json_path)
   if os.path.exists(sav_path):
     os.remove(sav_path)
+  save_file = f'chars/{user_name}/init_state/{char_name}.sav'
+  if os.path.exists(save_file):
+    os.remove(save_file)
   return return_success()
 
 # 加载角色
@@ -130,16 +136,15 @@ def init_chat(user_name, char_name):
   with open(char_path, 'r', encoding='utf-8') as f:
     char = json.loads(f.read())
   role_info = RoleInfo([], char['user'], char['bot'], char['action_start'], char['action_end'], 
-                       char['greeting'], char['use_qa'], str(uuid.uuid1()).replace('-', ''))
+                       char['greeting'], char['bot_persona'], char['example_message'], char['use_qa'], 
+                       str(uuid.uuid1()).replace('-', ''))
   greeting = char['greeting']
   model_tokens = []
   model_state = None
-  init_prompt = get_init_prompt(role_info, char['bot'], char['bot_persona'], char['user'], char['example_message'])
-  if greeting:
-    init_prompt += f"{role_info.bot}: {greeting}\n\n"
-    role_info.chatbot = [[None, greeting]]
+  out, model_tokens, model_state = get_init_state(user_name, role_info)
   if not os.path.exists(f"save/{user_name}/{char['bot']}.sav"):
-    out, model_tokens, model_state = model.run_rnn(model_tokens, model_state, model.pipeline.encode(init_prompt))
+    if greeting:
+      role_info.chatbot = [[None, greeting]]
     save_state(user_name, role_info, out, model_tokens, model_state)
   else:
     save_data = load_state(user_name, role_info.bot_chat)
@@ -310,21 +315,21 @@ def gen_msg(chat_param, out_pre, model_tokens_pre, model_state_pre, user_name, r
   save_log(user_name, role_info)
   return new_reply
 
-def get_init_prompt(role_info:RoleInfo, bot:str, bot_persona:str, user:str, example_message:str):
-  if role_info.action_start and role_info.action_start in example_message and role_info.action_end in example_message:
+def get_init_prompt(role_info:RoleInfo):
+  if role_info.action_start and role_info.action_start in role_info.example_message and role_info.action_end in role_info.example_message:
     role_info.action_start_token = model.pipeline.encode(f' {role_info.action_start}')
     role_info.action_end_token = model.pipeline.encode(role_info.action_end)
   else:
     role_info.action_start_token = None
     role_info.action_end_token = None
-  em = example_message.replace('<bot>', bot).replace('<user>', user)
-  init_prompt = f"阅读并理解以下{user}和{bot}之间的对话："
-  init_prompt_part2 = f"根据以下描述来扮演{bot}和{user}对话，在对话中加入描述角色的感情、想法、身体动作等内容，也可以加入对环境、场面或动作产生结果的描述，以此来促进对话的进展，这些描述要合理且文采斐然。\n"
+  em = role_info.example_message.replace('<bot>', role_info.bot).replace('<user>', role_info.user)
+  init_prompt = f"阅读并理解以下{role_info.user}和{role_info.bot}之间的对话："
+  init_prompt_part2 = f"根据以下描述来扮演{role_info.bot}和{role_info.user}对话，在对话中加入描述角色的感情、想法、身体动作等内容，也可以加入对环境、场面或动作产生结果的描述，以此来促进对话的进展，这些描述要合理且文采斐然。\n"
   if em:
     init_prompt += f'\n\n{em}\n\n{init_prompt_part2}'
   else:
     init_prompt = f'{init_prompt_part2}'
-  init_prompt += f"{bot_persona}"
+  init_prompt += f"{role_info.bot_persona}"
   init_prompt = init_prompt.strip().split('\n')
   for c in range(len(init_prompt)):
     init_prompt[c] = init_prompt[c].strip().strip('\u3000').strip('\r')
@@ -333,6 +338,8 @@ def get_init_prompt(role_info:RoleInfo, bot:str, bot_persona:str, user:str, exam
   for c in range(len(init_prompt)):
     init_prompt[c] = init_prompt[c].strip().strip('\u3000').strip('\r')
   init_prompt = '\n'.join(init_prompt).strip() + '\n\n'
+  if role_info.greeting:
+    init_prompt += f"{role_info.bot}: {role_info.greeting}\n\n"
   return init_prompt
 
 def save_state(user_name, role_info:RoleInfo, out, model_tokens, model_state, out_pre=None, model_tokens_pre=None, model_state_pre=None):
@@ -377,3 +384,31 @@ def save_log(user_name, role_info:RoleInfo):
   dict_list = [{'input': q, 'output': a} for q, a in role_info.chatbot]
   with open(f'log/{user_name}/{role_info.bot_chat}/{role_info.log_hash}.json', 'w', encoding='utf-8') as f:
     json.dump(dict_list, f, ensure_ascii=False, indent=2)
+
+def save_init_state(user_name, role_info:RoleInfo, out, model_tokens, model_state):
+  save_path = f"./chars/{user_name}/init_state/{role_info.bot_chat}.sav"
+  os.makedirs(os.path.dirname(save_path), exist_ok=True)
+  data = {
+    "out": out,
+    "model_tokens": model_tokens,
+    "model_state": model_state
+  }
+  with open(save_path, 'wb') as f:
+    pickle.dump(data, f)
+
+def get_init_state(user_name, role_info:RoleInfo):
+  out = ''
+  model_tokens = []
+  model_state = None
+  save_file = f"./chars/{user_name}/init_state/{role_info.bot_chat}.sav"
+  if os.path.exists(save_file):
+    with open(save_file, 'rb') as f:
+      data = pickle.load(f)
+      out = data['out']
+      model_tokens = data['model_tokens']
+      model_state = data['model_state']
+  else:
+    init_prompt = get_init_prompt(role_info)
+    out, model_tokens, model_state = model.run_rnn(model_tokens, model_state, model.pipeline.encode(init_prompt))
+    save_init_state(user_name, role_info, out, model_tokens, model_state)
+  return out, model_tokens, model_state

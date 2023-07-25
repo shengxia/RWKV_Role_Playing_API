@@ -6,7 +6,7 @@
 
 https://github.com/shengxia/RWKV_Role_Playing_UI
 
-感兴趣的话可以看看，使用Vue.js和Mint-UI做的。
+感兴趣的话可以看看，使用Vue.js和Mint-UI做的。可以把这个UI项目的Release里面下载已经打包好的版本，然后把解压缩后的文件扔到API项目里的ui文件夹里面，双击里面的start_ui.bat，这样就可以通过访问 http://127.0.0.1:9000 来使用该项目了（前提是这个项目已经启动了）。
 
 ### 安装方法：
 
