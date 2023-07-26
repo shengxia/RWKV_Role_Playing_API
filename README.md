@@ -8,6 +8,8 @@ https://github.com/shengxia/RWKV_Role_Playing_UI
 
 感兴趣的话可以看看，使用Vue.js和Mint-UI做的。可以把这个UI项目的Release里面下载已经打包好的版本，然后把解压缩后的文件扔到API项目里的ui文件夹里面，双击里面的start_ui.bat，这样就可以通过访问 http://127.0.0.1:9000 来使用该项目了（前提是这个项目已经启动了）。
 
+最近的更新中增加了一个游客登录功能，其实就是创建一个临时账户，所有的信息都存在那里，包括存档，角色，登录信息等，但是聊天日志没有单独保存，如果部署该项目给多人使用的话，建议写个定时任务，定时删除tmp文件夹里面的东西（具体的清除方案请自行斟酌，比如根据.sav文件的最后更新时间来判断这个用户是否还在聊着之类的方法），免得把硬盘空间给用完了。
+
 ### 安装方法：
 
 先安装依赖
@@ -39,7 +41,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ----------
 
-### 1.用户登陆
+### 用户登陆
 >描述：想新增用户的话，可以在user目录下面新建一个以用户名命名的文件，没有扩展名，然后里面存放密码。
 
 ***URL***
@@ -77,7 +79,41 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 2.获取角色列表
+### 游客登陆
+
+***URL***
+
+`/login/tmp`
+
+***Method***
+
+`POST`
+
+***Param***
+
+无
+
+***Return Example***
+
+```json
+{
+  "data": {
+    "user_name": "tmp-b42070f52b5f11eeb42d38d547b88377",
+    "token": "tmp-b42070f52b5f11eeb42d38d547b88377"
+  },
+  "message": "success",
+  "code": 200
+}
+```
+
+***Code***
+
+|状态码|说明|
+|:--:|:--:|
+|200|请求成功|
+|400|错误|
+
+### 获取角色列表
 
 ***URL***
 
@@ -113,7 +149,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 3.获取角色详情
+### 获取角色详情
 
 ***URL***
 
@@ -158,7 +194,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 4.创建/保存角色
+### 创建/保存角色
 
 ***URL***
 
@@ -201,7 +237,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 5.删除角色
+### 删除角色
 
 ***URL***
 
@@ -236,7 +272,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 6.加载角色
+### 加载角色
 
 ***URL***
 
@@ -275,7 +311,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 7.对话
+### 对话
 
 ***URL***
 
@@ -318,7 +354,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 8.重说
+### 重说
 
 ***URL***
 
@@ -360,7 +396,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 9.重置
+### 重置
 
 ***URL***
 
@@ -399,7 +435,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 9.调试
+### 调试
 
 ***URL***
 
@@ -437,7 +473,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 10.回溯对话
+### 回溯对话
 
 ***URL***
 
@@ -473,7 +509,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |200|请求成功|
 |400|错误|
 
-### 11.替角色说
+### 替角色说
 
 ***URL***
 
