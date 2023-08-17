@@ -379,10 +379,15 @@ def get_occurrence(role_info:RoleInfo, is_pre=False):
   occurrence = {}
   for i in chatbot:
     if i[1]:
-      bot_token = model.pipeline.encode(i[1])
+      c = i[1].replace(role_info.user_chat, '').replace(role_info.bot_chat, '')
+      bot_token = model.pipeline.encode(c)
+      bot_token.reverse()
       for t in bot_token:
+        if t in model.AVOID_REPEAT_TOKENS:
+          continue
         for o in occurrence:
-          occurrence[o] *= model.penalty_decay
+          if occurrence[o] > 1:
+            occurrence[o] *= 0.999
         occurrence[t] = 1 + (occurrence[t] if t in occurrence else 0)
   return occurrence
 

@@ -1,4 +1,3 @@
-import copy
 import torch
 torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.allow_tf32 = True
@@ -17,7 +16,7 @@ class ModelUtils:
   DOUBLE_END_OF_LINE = 261
   CHN_PERIOD_END = 28329
   NEG_INF = -999999999
-  AVOID_REPEAT = '，：？！'
+  AVOID_REPEAT = '.!?,()[]{}。！？，（）:：'
   AVOID_REPEAT_TOKENS = []
   penalty_decay = 0.996
   
@@ -52,12 +51,15 @@ class ModelUtils:
       if chat_param['min_len'] >0 and i < chat_param['min_len']:
         out[self.CHN_PERIOD_END] = self.NEG_INF
         out[self.DOUBLE_END_OF_LINE] = self.NEG_INF
-        out[self.END_OF_LINE] = self.NEG_INF    
+        out[self.END_OF_LINE] = self.NEG_INF
       for n in occurrence:
         out[n] -= (chat_param['presence_penalty'] + occurrence[n] * chat_param['frequency_penalty'])
       token = self.pipeline.sample_logits(out, chat_param['temperature'], chat_param['top_p'])
+      if chat_param['temperature'] > 0.2:
+        chat_param['temperature'] -= 0.01
       for o in occurrence:
-        occurrence[o] *= self.penalty_decay
+        if occurrence[o] > 1:
+          occurrence[o] *= self.penalty_decay
       occurrence[token] = 1 + (occurrence[token] if token in occurrence else 0)
       out, model_tokens, model_state = self.run_rnn(model_tokens, model_state, [token])
       out[self.END_OF_TEXT] = self.NEG_INF
