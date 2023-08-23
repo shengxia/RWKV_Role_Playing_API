@@ -12,32 +12,41 @@ https://github.com/shengxia/RWKV_Role_Playing_UI
 
 ### 安装方法：
 
-先安装依赖
+先安装pytorch
+```sh
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
-pip install torch==1.13.1 --extra-index-url https://download.pytorch.org/whl/cu117 --upgrade
 
+再安装依赖
+```sh
 pip install -r requirements.txt
 ```
-
-启动：
+  或者
+```sh
+poetry install
 ```
+
+
+### 启动：
+```sh
 python api.py --listen --model model/path
 ```
 
 以下是一个例子: 
-```
+```sh
 python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx4096
 ```
 各种启动参数解释如下：
 
-| 参数 | 解释 |
-| --- | --- |
-| --port | api的端口 |
-| --model | 要加载的模型路径 |
-| --strategy | 模型加载的策略 |
-| --cuda_on | 控制RWKV_CUDA_ON这个环境变量的，0-禁用，1-启用 |
+| 参数       | 解释                                           |
+| ---------- | ---------------------------------------------- |
+| --port     | api的端口                                      |
+| --model    | 要加载的模型路径                               |
+| --strategy | 模型加载的策略                                 |
+| --cuda_on  | 控制RWKV_CUDA_ON这个环境变量的，0-禁用，1-启用 |
+| --jit_on   | 控制RWKV_JIT_ON这个环境变量的，0-禁用，1-启用  |
 
-模型的加载方式（--strategy）我默认使用的是"cuda fp16i8"，如果想使用其他的加载方式可以自行调整该参数，具体有哪些值可以参考[这个文章](https://zhuanlan.zhihu.com/p/609154637)或者这张图![图片](./pic/4.jpg)
+模型的加载方式（--strategy）我默认使用的是`cuda fp16i8 *10 -> cuda fp16`，如果想使用其他的加载方式可以自行调整该参数，具体有哪些值可以参考[这个文章](https://zhuanlan.zhihu.com/p/609154637)或者这张图![图片](./pic/4.jpg)
 
 ----------
 
@@ -54,10 +63,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| password | 是 | 密码 | String |
+|   参数    | 必须  |  说明  |  取值  |
+| :-------: | :---: | :----: | :----: |
+| user_name |  是   | 用户名 | String |
+| password  |  是   |  密码  | String |
 
 ***Return Example***
 
@@ -74,10 +83,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 游客登陆
 
@@ -108,10 +117,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 获取角色列表
 
@@ -125,10 +134,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
+|   参数    | 必须  |          说明          |  取值  |
+| :-------: | :---: | :--------------------: | :----: |
+| user_name |  是   |         用户名         | String |
+|   token   |  是   | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
@@ -144,10 +153,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 获取角色详情
 
@@ -161,11 +170,11 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
-| character_name | 是 | 角色名称 | String |
+|      参数      | 必须  |          说明          |  取值  |
+| :------------: | :---: | :--------------------: | :----: |
+|   user_name    |  是   |         用户名         | String |
+|     token      |  是   | 令牌，从登录接口中获取 | String |
+| character_name |  是   |        角色名称        | String |
 
 ***Return Example***
 
@@ -189,10 +198,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 创建/保存角色
 
@@ -206,19 +215,19 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| bot | 是 | 角色名称 | String |  
-| user | 是 | 角色如何称呼用户 | String |
-| action_start | 否 | 旁白开始符号 | String |
-| action_end | 否 | 旁白结束符号 | String |
-| greeting | 是 | 角色的开场白 | String |
-| bot_persona | 是 | 角色的性格 | String |
-| example_message | 否 | 示例对话 | String |
-| use_qa | 否 | 是否使用User和Assistant代替你和角色的名字，默认为否(False)，但是建议在使用的时候，如果想设置为否，直接传空字符串 | Boolen |
-| avatar | 否 | 角色形象，图片经过base64编码后的字符串 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
+|      参数       | 必须  |                                                       说明                                                       |  取值  |
+| :-------------: | :---: | :--------------------------------------------------------------------------------------------------------------: | :----: |
+|    user_name    |  是   |                                                      用户名                                                      | String |
+|       bot       |  是   |                                                     角色名称                                                     | String |
+|      user       |  是   |                                                 角色如何称呼用户                                                 | String |
+|  action_start   |  否   |                                                   旁白开始符号                                                   | String |
+|   action_end    |  否   |                                                   旁白结束符号                                                   | String |
+|    greeting     |  是   |                                                   角色的开场白                                                   | String |
+|   bot_persona   |  是   |                                                    角色的性格                                                    | String |
+| example_message |  否   |                                                     示例对话                                                     | String |
+|     use_qa      |  否   | 是否使用User和Assistant代替你和角色的名字，默认为否(False)，但是建议在使用的时候，如果想设置为否，直接传空字符串 | Boolen |
+|     avatar      |  否   |                                      角色形象，图片经过base64编码后的字符串                                      | String |
+|      token      |  是   |                                              令牌，从登录接口中获取                                              | String |
 
 ***Return Example***
 
@@ -232,10 +241,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 删除角色
 
@@ -249,11 +258,11 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| character_name | 否 | 角色保存名称 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
+|      参数      | 必须  |          说明          |  取值  |
+| :------------: | :---: | :--------------------: | :----: |
+|   user_name    |  是   |         用户名         | String |
+| character_name |  否   |      角色保存名称      | String |
+|     token      |  是   | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
@@ -267,10 +276,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 加载角色
 
@@ -284,11 +293,11 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| character_name | 是 | 角色名称 | String |  
-| token | 是 | 令牌，从登录接口中获取 | String |
+|      参数      | 必须  |          说明          |  取值  |
+| :------------: | :---: | :--------------------: | :----: |
+|   user_name    |  是   |         用户名         | String |
+| character_name |  是   |        角色名称        | String |
+|     token      |  是   | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
@@ -306,10 +315,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 对话
 
@@ -323,17 +332,17 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| character_name | 是 | 角色名称 | String |
-| prompt | 是 | 用户输入的内容 | String |  
-| min_len | 否 | 最小回复长度，0为不控制，默认是0 | Number |  
-| top_p | 否 | top_p值，默认为0.65 | Number |  
-| temperature | 否 | temperature值，默认为2 | Number |  
-| presence_penalty | 否 | presence_penalty值，默认为0.2 | Number |  
-| frequency_penalty | 否 | frequency_penalty值，默认为0.2 | Number |  
-| token | 是 | 令牌，从登录接口中获取 | String |
+|       参数        | 必须  |               说明               |  取值  |
+| :---------------: | :---: | :------------------------------: | :----: |
+|     user_name     |  是   |              用户名              | String |
+|  character_name   |  是   |             角色名称             | String |
+|      prompt       |  是   |          用户输入的内容          | String |
+|      min_len      |  否   | 最小回复长度，0为不控制，默认是0 | Number |
+|       top_p       |  否   |       top_p值，默认为0.65        | Number |
+|    temperature    |  否   |      temperature值，默认为2      | Number |
+| presence_penalty  |  否   |  presence_penalty值，默认为0.2   | Number |
+| frequency_penalty |  否   |  frequency_penalty值，默认为0.2  | Number |
+|       token       |  是   |      令牌，从登录接口中获取      | String |
 
 ***Return Example***
 
@@ -349,10 +358,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 重说
 
@@ -366,16 +375,16 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| character_name | 是 | 角色名称 | String |
-| min_len | 否 | 最小回复长度，0为不控制，默认是0 | Number |  
-| top_p | 否 | top_p值，默认为0.6 | Number |  
-| temperature | 否 | temperature值，默认为1.8 | Number |  
-| presence_penalty | 否 | presence_penalty值，默认为0.2 | Number |  
-| frequency_penalty | 否 | frequency_penalty值，默认为0.2 | Number |  
-| token | 是 | 令牌，从登录接口中获取 | String |
+|       参数        | 必须  |               说明               |  取值  |
+| :---------------: | :---: | :------------------------------: | :----: |
+|     user_name     |  是   |              用户名              | String |
+|  character_name   |  是   |             角色名称             | String |
+|      min_len      |  否   | 最小回复长度，0为不控制，默认是0 | Number |
+|       top_p       |  否   |        top_p值，默认为0.6        | Number |
+|    temperature    |  否   |     temperature值，默认为1.8     | Number |
+| presence_penalty  |  否   |  presence_penalty值，默认为0.2   | Number |
+| frequency_penalty |  否   |  frequency_penalty值，默认为0.2  | Number |
+|       token       |  是   |      令牌，从登录接口中获取      | String |
 
 ***Return Example***
 
@@ -391,10 +400,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 重置
 
@@ -408,11 +417,11 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| character_name | 是 | 角色名称 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
+|      参数      | 必须  |          说明          |  取值  |
+| :------------: | :---: | :--------------------: | :----: |
+|   user_name    |  是   |         用户名         | String |
+| character_name |  是   |        角色名称        | String |
+|     token      |  是   | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
@@ -430,10 +439,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 调试
 
@@ -447,11 +456,11 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| character_name | 是 | 角色名称 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
+|      参数      | 必须  |          说明          |  取值  |
+| :------------: | :---: | :--------------------: | :----: |
+|   user_name    |  是   |         用户名         | String |
+| character_name |  是   |        角色名称        | String |
+|     token      |  是   | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
@@ -468,10 +477,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 回溯对话
 
@@ -485,12 +494,12 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| character_name | 是 | 角色名称 | String |
-| log_index | 否 | 回溯对话的节点，用户和角色进行一次对话（用户和角色各说了一条）视为一个节点，角色的开场白（该组对话没有用户的发言，这个节点值通常是0）也算是一个节点，节点从0开始，比如和某个角色进行了三组对话，我想回溯到第二组，那么这个值是1，如果不传这个参数，那么程序会取默认值为0 | Number |
-| token | 是 | 令牌，从登录接口中获取 | String |
+|      参数      | 必须  |                                                                                                                                   说明                                                                                                                                   |  取值  |
+| :------------: | :---: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----: |
+|   user_name    |  是   |                                                                                                                                  用户名                                                                                                                                  | String |
+| character_name |  是   |                                                                                                                                 角色名称                                                                                                                                 | String |
+|   log_index    |  否   | 回溯对话的节点，用户和角色进行一次对话（用户和角色各说了一条）视为一个节点，角色的开场白（该组对话没有用户的发言，这个节点值通常是0）也算是一个节点，节点从0开始，比如和某个角色进行了三组对话，我想回溯到第二组，那么这个值是1，如果不传这个参数，那么程序会取默认值为0 | Number |
+|     token      |  是   |                                                                                                                          令牌，从登录接口中获取                                                                                                                          | String |
 
 ***Return Example***
 
@@ -504,10 +513,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
 
 ### 替角色说
 
@@ -521,12 +530,12 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Param***
 
-|参数|必须|说明|取值|
-|:--:|:--:|:--:|:--:|
-| user_name | 是 | 用户名 | String |
-| character_name | 是 | 角色名称 | String |
-| message | 是 | 要替角色说的话 | String |
-| token | 是 | 令牌，从登录接口中获取 | String |
+|      参数      | 必须  |          说明          |  取值  |
+| :------------: | :---: | :--------------------: | :----: |
+|   user_name    |  是   |         用户名         | String |
+| character_name |  是   |        角色名称        | String |
+|    message     |  是   |     要替角色说的话     | String |
+|     token      |  是   | 令牌，从登录接口中获取 | String |
 
 ***Return Example***
 
@@ -540,7 +549,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 
 ***Code***
 
-|状态码|说明|
-|:--:|:--:|
-|200|请求成功|
-|400|错误|
+| 状态码 |   说明   |
+| :----: | :------: |
+|  200   | 请求成功 |
+|  400   |   错误   |
