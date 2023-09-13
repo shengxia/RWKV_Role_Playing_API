@@ -3,10 +3,15 @@ from modules.model_utils import ModelUtils
 
 model = None
 
-
 def set_model(model_class: ModelUtils):
     global model
     model = model_class
+    print("set model success")
+
+
+def get_model() -> ModelUtils:
+    global model
+    return model
 
 
 def return_success(data=None, message='success', code=200):

@@ -3,11 +3,6 @@ import argparse
 from flask import Flask
 from flask_cors import CORS
 
-from modules.login import user_login
-from modules.methods import methods
-from modules.common import set_model
-from modules.model_utils import ModelUtils
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--port", type=int, default="8888")
 parser.add_argument("--model", type=str, default="model/fp16i8-RWKV-4-World-CHNtuned-7B-v1-20230709-ctx4096")
@@ -18,6 +13,11 @@ cmd_opts = parser.parse_args()
 
 os.environ["RWKV_CUDA_ON"] = cmd_opts.cuda_on
 os.environ["RWKV_JIT_ON"] = cmd_opts.jit_on
+
+from modules.login import user_login
+from modules.methods import methods
+from modules.common import set_model
+from modules.model_utils import ModelUtils
 
 set_model(ModelUtils(cmd_opts))
 

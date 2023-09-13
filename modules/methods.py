@@ -5,7 +5,7 @@ import pickle
 import uuid
 import copy
 
-from modules.common import return_error, return_success, model
+from modules.common import return_error, return_success, get_model
 from modules.model_utils import format_chat_param
 from modules.role_info import RoleInfo
 
@@ -162,6 +162,7 @@ def init_chat(user_name, char_name):
         str(uuid.uuid1()).replace('-', '')
     )
     if role_info.action_start and role_info.action_start in role_info.example_message and role_info.action_end in role_info.example_message:
+        model = get_model()
         role_info.action_start_token = model.pipeline.encode(
             f' {role_info.action_start}')
         role_info.action_end_token = model.pipeline.encode(
@@ -198,6 +199,7 @@ def chat_reply():
         'frequency_penalty', 0.2, type=float)
     if not prompt or not char_name:
         return return_error('关键参数为空')
+    model = get_model()
     save_data = load_state(user_name, char_name)
     if not save_data:
         return return_error('尚未加载角色')
@@ -281,6 +283,7 @@ def debug_token():
     save_data = load_state(user_name, char_name)
     if not save_data:
         return return_error('尚未开始对话')
+    model = get_model()
     data = {
         'token_count': len(save_data['model_tokens']),
         'token_state': model.pipeline.decode(save_data['model_tokens'])
@@ -322,6 +325,7 @@ def chat_back():
             init_prompt += f"{role_info.bot}: {row[1]}\n\n"
     model_tokens = []
     model_state = None
+    model = get_model()
     out_pre, model_tokens_pre, model_state_pre = model.run_rnn(
         model_tokens, model_state, model.pipeline.encode(init_prompt))
     mtp = copy.deepcopy(model_tokens_pre)
@@ -356,6 +360,7 @@ def chat_tamper():
     role_info = save_data['role_info']
     role_info.chatbot[-1][1] = message
     new = f" {message}\n\n"
+    model = get_model()
     out, model_tokens, model_state = model.run_rnn(copy.deepcopy(
         save_data['model_tokens_pre']), copy.deepcopy(save_data['model_state_pre']), model.pipeline.encode(new))
     save_state(user_name, role_info, out, model_tokens, model_state,
@@ -366,6 +371,7 @@ def chat_tamper():
 def gen_msg(chat_param, out_pre, model_tokens_pre, model_state_pre, user_name, role_info: RoleInfo, occurrence):
     c_model_tokens_pre = copy.deepcopy(model_tokens_pre)
     c_model_state_pre = copy.deepcopy(model_state_pre)
+    model = get_model()
     new_reply, out, model_tokens, model_state = model.get_reply(
         model_tokens_pre, model_state_pre, out_pre, chat_param, occurrence)
     role_info.chatbot[-1][1] = new_reply
@@ -430,6 +436,7 @@ def get_occurrence(role_info: RoleInfo, is_pre=False):
     if is_pre:
         chatbot = chatbot[:-1]
     occurrence = {}
+    model = get_model()
     for i in chatbot:
         if i[1]:
             c = i[1].replace(role_info.user_chat, '').replace(
@@ -479,6 +486,7 @@ def get_init_state(user_name, role_info: RoleInfo):
             model_state = data['model_state']
     else:
         init_prompt = get_init_prompt(role_info)
+        model = get_model()
         out, model_tokens, model_state = model.run_rnn(
             model_tokens, model_state, model.pipeline.encode(init_prompt))
         save_init_state(user_name, role_info, out, model_tokens, model_state)
