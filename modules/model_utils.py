@@ -8,36 +8,29 @@ torch.backends.cudnn.allow_tf32 = True
 torch.backends.cuda.matmul.allow_tf32 = True
 
 
-def format_chat_param(top_p, temperature, presence_penalty, frequency_penalty, min_len=0, action_start_token=None, action_end_token=None):
+def format_chat_param(top_p, temperature, presence_penalty, frequency_penalty, max_len=0):
     chat_param = {
         'top_p': top_p,
         'temperature': temperature,
         'presence_penalty': presence_penalty,
         'frequency_penalty': frequency_penalty,
-        'min_len': min_len,
-        'action_start_token': action_start_token,
-        'action_end_token': action_end_token,
+        'max_len': max_len
     }
     return chat_param
-
 
 def clear_cache():
     gc.collect()
     torch.cuda.empty_cache()
-
 
 class ModelUtils:
     model = None
     pipeline = None
     CHUNK_LEN = 100
     END_OF_TEXT = 0
-    END_OF_LINE = 11
     DOUBLE_END_OF_LINE = 261
-    CHN_PERIOD_END = 28329
     NEG_INF = -999999999
     AVOID_REPEAT = '.!?,()[]{}。！？，（）:：'
     AVOID_REPEAT_TOKENS = []
-    penalty_decay = 0.996
 
     def __init__(self, args):
         self.load_model(args.model, args.strategy)
@@ -61,29 +54,33 @@ class ModelUtils:
             out[model_tokens[-1]] = self.NEG_INF
         return out, model_tokens, model_state
 
-    def get_reply(self, model_tokens, model_state, out, chat_param, occurrence={}):
+    def get_reply(self, model_tokens, model_state, out, chat_param):
         clear_cache()
         begin = len(model_tokens)
         out_last = begin
-        for i in range(999):
-            if i == 0 and chat_param['action_start_token']:
-                out[chat_param['action_start_token']] = 10
-            if chat_param['min_len'] > 0 and i < chat_param['min_len']:
-                out[self.CHN_PERIOD_END] = self.NEG_INF
-                out[self.DOUBLE_END_OF_LINE] = self.NEG_INF
-                out[self.END_OF_LINE] = self.NEG_INF
+        for i in range(1024):
+            if chat_param['max_len'] >0:
+                if i <= 0:
+                    nl_bias = self.NEG_INF
+                elif i <= chat_param['max_len']:
+                    nl_bias = (i - chat_param['max_len']) * 0.1
+                else:
+                    nl_bias = 0
+                out[self.DOUBLE_END_OF_LINE] += nl_bias
+            occurrence = {}
+            if out_last > 256:
+                tokens_chunk = model_tokens[(out_last - 256):]
+            else:
+                tokens_chunk = model_tokens[begin:]
+            for token in tokens_chunk:
+                if token in self.AVOID_REPEAT_TOKENS:
+                    continue
+                occurrence[token] = 1 + (occurrence[token] if token in occurrence else 0)
             for n in occurrence:
-                out[n] -= (chat_param['presence_penalty'] +
-                           occurrence[n] * chat_param['frequency_penalty'])
+                out[n] -= (chat_param['presence_penalty'] + occurrence[n] * 
+                           chat_param['frequency_penalty'])
             token = self.pipeline.sample_logits(
                 out, chat_param['temperature'], chat_param['top_p'])
-            if chat_param['temperature'] > 0.2:
-                chat_param['temperature'] -= 0.01
-            for o in occurrence:
-                if occurrence[o] > 1:
-                    occurrence[o] *= self.penalty_decay
-            occurrence[token] = 1 + \
-                (occurrence[token] if token in occurrence else 0)
             out, model_tokens, model_state = self.run_rnn(
                 model_tokens, model_state, [token])
             out[self.END_OF_TEXT] = self.NEG_INF

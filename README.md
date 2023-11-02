@@ -26,7 +26,6 @@ pip install -r requirements.txt
 poetry install
 ```
 
-
 ### 启动：
 ```sh
 python api.py --listen --model model/path
@@ -183,8 +182,6 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 	"data": {
 		"user": "哥哥",
 		"bot": "小雪",
-		"action_start": "{",
-		"action_end": "}",
 		"greeting": "{看到你走了过来，欢快的向你跑了过来}哥哥，来和我聊聊天吧。",
 		"bot_persona": "你扮演小雪，是一个调皮可爱，美丽性感的女孩，是我的邻居。",
 		"example_message": "<user>: 我们来聊聊天吧。\n\n<bot>: {点了点头，微笑着看着你}好啊，<user>，我们聊点什么呢？\n\n<user>: 聊一些关于你的话题吧。\n\n<bot>: {心里非常高兴，但表面上还是保持着微笑}关于我的话题？<user>~你想要知道我的哪些事情呢？\n\n<user>:  我想知道你喜欢的人是谁。\n\n<bot>: {稍微愣了一下，随即露出了甜美的笑容}<user>~你问这个问题是不是很奇怪呀，你已经知道我喜欢的人是谁了。\n\n<user>:  是吗？我怎么不知道呢？\n\n<bot>: {心里有些失望，但仍然微笑着看着你}那好吧，我的答案是：我喜欢的人就是<user>啊，你虽然不像别人那样能力很强，但是却有着一颗温柔而善良的心，而且非常关心我。",
@@ -220,8 +217,6 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |    user_name    |  是   |                                                      用户名                                                      | String |
 |       bot       |  是   |                                                     角色名称                                                     | String |
 |      user       |  是   |                                                 角色如何称呼用户                                                 | String |
-|  action_start   |  否   |                                                   旁白开始符号                                                   | String |
-|   action_end    |  否   |                                                   旁白结束符号                                                   | String |
 |    greeting     |  是   |                                                   角色的开场白                                                   | String |
 |   bot_persona   |  是   |                                                    角色的性格                                                    | String |
 | example_message |  否   |                                                     示例对话                                                     | String |
@@ -337,7 +332,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |     user_name     |  是   |              用户名              | String |
 |  character_name   |  是   |             角色名称             | String |
 |      prompt       |  是   |          用户输入的内容          | String |
-|      min_len      |  否   | 最小回复长度，0为不控制，默认是0 | Number |
+|      max_len      |  否   | 最大回复长度，0为不控制，默认是0 | Number |
 |       top_p       |  否   |       top_p值，默认为0.65        | Number |
 |    temperature    |  否   |      temperature值，默认为2      | Number |
 | presence_penalty  |  否   |  presence_penalty值，默认为0.2   | Number |
@@ -379,7 +374,7 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 | :---------------: | :---: | :------------------------------: | :----: |
 |     user_name     |  是   |              用户名              | String |
 |  character_name   |  是   |             角色名称             | String |
-|      min_len      |  否   | 最小回复长度，0为不控制，默认是0 | Number |
+|      max_len      |  否   | 最大回复长度，0为不控制，默认是0 | Number |
 |       top_p       |  否   |        top_p值，默认为0.6        | Number |
 |    temperature    |  否   |     temperature值，默认为1.8     | Number |
 | presence_penalty  |  否   |  presence_penalty值，默认为0.2   | Number |
