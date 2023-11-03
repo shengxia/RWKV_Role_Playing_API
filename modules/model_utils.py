@@ -91,4 +91,5 @@ class ModelUtils:
             if '\n\n' in send_msg:
                 send_msg = send_msg.strip()
                 break
-        return send_msg, out, model_tokens, model_state
+            yield send_msg, out, model_tokens, model_state
+        yield send_msg, out, model_tokens, model_state

@@ -18,7 +18,7 @@ def before():
     token = flask.request.values.get('token')
     if not user_name or not token:
         return return_error('关键参数为空')
-    prefix = get_dir_prefix()
+    prefix = get_dir_prefix(token)
     user_cache = f'{prefix}cache/{user_name}'
     if not os.path.exists(user_cache):
         return return_error('用户不存在')
@@ -32,7 +32,8 @@ def before():
 @methods.route("/characters/list", methods=['post'])
 def characters_list():
     user_name = flask.request.values.get('user_name')
-    prefix = get_dir_prefix()
+    token = flask.request.values.get('token')
+    prefix = get_dir_prefix(token)
     path = f'{prefix}chars/{user_name}/'
     files = os.listdir(path)
     char_list = []
@@ -59,7 +60,8 @@ def characters_get():
     character_name = flask.request.values.get('character_name')
     if not character_name:
         return return_error('关键参数为空')
-    prefix = get_dir_prefix()
+    token = flask.request.values.get('token')
+    prefix = get_dir_prefix(token)
     character_path = f'{prefix}chars/{user_name}/{character_name}.json'
     if not os.path.exists(character_path):
         return return_error('角色不存在')
@@ -80,7 +82,8 @@ def characters_save():
     avatar = flask.request.values.get('avatar')
     if not user or not bot or not greeting or not bot_persona:
         return return_error('关键参数为空')
-    prefix = get_dir_prefix()
+    token = flask.request.values.get('token')
+    prefix = get_dir_prefix(token)
     with open(f"{prefix}chars/{user_name}/{bot}.json", 'w', encoding='utf8') as f:
         data = {
             'user': user,
@@ -107,7 +110,8 @@ def characters_delete():
     char_name = flask.request.values.get('character_name')
     if not char_name:
         return return_error('关键参数为空')
-    prefix = get_dir_prefix()
+    token = flask.request.values.get('token')
+    prefix = get_dir_prefix(token)
     json_path = f"{prefix}chars/{user_name}/{char_name}.json"
     sav_path = f"{prefix}save/{user_name}/{char_name}.sav"
     save_file = f'{prefix}chars/{user_name}/init_state/{char_name}.sav'
@@ -126,7 +130,8 @@ def characters_load():
     char_name = flask.request.values.get('character_name')
     if not char_name:
         return return_error('关键参数为空')
-    role_info = init_chat(user_name, char_name)
+    token = flask.request.values.get('token')
+    role_info = init_chat(token, user_name, char_name)
     if not role_info:
         return return_error('角色不存在')
     data = {
@@ -134,8 +139,8 @@ def characters_load():
     }
     return return_success(data)
 
-def init_chat(user_name, char_name):
-    prefix = get_dir_prefix()
+def init_chat(token, user_name, char_name):
+    prefix = get_dir_prefix(token)
     char_path = f'{prefix}chars/{user_name}/{char_name}.json'
     if not os.path.exists(char_path):
         return False
@@ -148,13 +153,13 @@ def init_chat(user_name, char_name):
     greeting = char['greeting']
     model_tokens = []
     model_state = None
-    out, model_tokens, model_state = get_init_state(user_name, role_info)
+    out, model_tokens, model_state = get_init_state(token, user_name, role_info)
     if not os.path.exists(f"{prefix}save/{user_name}/{char['bot']}.sav"):
         if greeting:
             role_info.chatbot = [[None, greeting]]
-        save_state(user_name, role_info, out, model_tokens, model_state)
+        save_state(token, user_name, role_info, out, model_tokens, model_state)
     else:
-        save_data = load_state(user_name, role_info.bot_chat)
+        save_data = load_state(token, user_name, role_info.bot_chat)
         if not save_data:
             return False
         role_info = save_data['role_info']
@@ -176,7 +181,8 @@ def chat_reply():
     if not prompt or not char_name:
         return return_error('关键参数为空')
     model = get_model()
-    save_data = load_state(user_name, char_name)
+    token = flask.request.values.get('token')
+    save_data = load_state(token, user_name, char_name)
     if not save_data:
         return return_error('尚未加载角色')
     role_info = save_data['role_info']
@@ -185,12 +191,18 @@ def chat_reply():
         save_data['model_tokens'], save_data['model_state'], model.pipeline.encode(new))
     role_info.chatbot += [[prompt, None]]
     chat_param = format_chat_param(top_p, temperature, presence_penalty, frequency_penalty, max_len)
-    new_reply = gen_msg(chat_param, out_pre, model_tokens_pre,
-                        model_state_pre, user_name, role_info)
-    data = {
-        'reply': new_reply
+    headers = {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'X-Accel-Buffering': 'no',
     }
-    return return_success(data)
+    return flask.Response(generate(token, chat_param, out_pre, model_tokens_pre, model_state_pre, 
+                                   user_name, role_info), mimetype="text/event-stream", headers=headers)
+
+def generate(token, chat_param, out_pre, model_tokens_pre, model_state_pre, user_name, role_info):
+    for new_reply in gen_msg(token, chat_param, out_pre, model_tokens_pre,
+                    model_state_pre, user_name, role_info):
+        yield '\n\ndata: ' + new_reply
 
 # 重说
 @methods.route("/chat/resay", methods=['post'])
@@ -206,19 +218,22 @@ def chat_resay():
         'frequency_penalty', 0.2, type=float)
     if not char_name:
         return return_error('关键参数为空')
-    save_data = load_state(user_name, char_name)
+    token = flask.request.values.get('token')
+    save_data = load_state(token, user_name, char_name)
     if not save_data:
         return return_error('尚未加载角色')
     if not save_data['model_tokens_pre']:
         return return_error('尚未开始对话')
     role_info = save_data['role_info']
     chat_param = format_chat_param(top_p, temperature, presence_penalty, frequency_penalty, min_len)
-    new_reply = gen_msg(chat_param, save_data['out_pre'], save_data['model_tokens_pre'],
-                        save_data['model_state_pre'], user_name, role_info)
-    data = {
-        'reply': new_reply
+    headers = {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'X-Accel-Buffering': 'no',
     }
-    return return_success(data)
+    return flask.Response(generate(token, chat_param, save_data['out_pre'], save_data['model_tokens_pre'], 
+                                   save_data['model_state_pre'], user_name, role_info), 
+                                   mimetype="text/event-stream", headers=headers)
 
 # 重置
 @methods.route("/chat/reset", methods=['post'])
@@ -227,11 +242,12 @@ def chat_reset():
     char_name = flask.request.values.get('character_name')
     if not char_name:
         return return_error('关键参数为空')
-    prefix = get_dir_prefix()
+    token = flask.request.values.get('token')
+    prefix = get_dir_prefix(token)
     save_file = f"{prefix}save/{user_name}/{char_name}.sav"
     if os.path.exists(save_file):
         os.remove(save_file)
-    role_info = init_chat(user_name, char_name)
+    role_info = init_chat(token, user_name, char_name)
     if not role_info:
         return return_error('角色不存在')
     data = {
@@ -246,7 +262,8 @@ def debug_token():
     char_name = flask.request.values.get('character_name')
     if not char_name:
         return return_error('关键参数为空')
-    save_data = load_state(user_name, char_name)
+    token = flask.request.values.get('token')
+    save_data = load_state(token, user_name, char_name)
     if not save_data:
         return return_error('尚未开始对话')
     model = get_model()
@@ -267,11 +284,12 @@ def chat_back():
         return return_error('关键参数为空')
     if not log_index or log_index < 0:
         log_index = 0
-    prefix = get_dir_prefix()
+    token = flask.request.values.get('token')
+    prefix = get_dir_prefix(token)
     char_path = f'{prefix}chars/{user_name}/{char_name}.json'
     if not os.path.exists(char_path):
         return return_error('角色不存在')
-    save_data = load_state(user_name, char_name)
+    save_data = load_state(token, user_name, char_name)
     role_info = save_data['role_info']
     chatbot = role_info.chatbot
     # 根据log_index来截取对话，然后从头重新构建chat_pre和chat
@@ -285,7 +303,7 @@ def chat_back():
         if row[1]:
             init_prompt += f"{role_info.bot}: {row[1]}\n\n"
     if chatbot[log_index][0]:
-        init_prompt += f"{role_info.user}: {chatbot[log_index][0]}\n\n"
+        init_prompt += f"{role_info.user}: {chatbot[log_index][0]}\n\n{role_info.bot}:"
     model_tokens = []
     model_state = None
     model = get_model()
@@ -293,15 +311,15 @@ def chat_back():
         model_tokens, model_state, model.pipeline.encode(init_prompt))
     mtp = copy.deepcopy(model_tokens_pre)
     msp = copy.deepcopy(model_state_pre)
-    new = f"{role_info.bot}: {next_reply}\n\n"
+    new = f"{next_reply}\n\n"
     out, model_tokens, model_state = model.run_rnn(
         model_tokens_pre, model_state_pre, model.pipeline.encode(new))
     # 当log_index为0时，需要特殊处理
     if log_index == 0:
-        save_state(user_name, role_info, out, model_tokens,
+        save_state(token, user_name, role_info, out, model_tokens,
                    model_state, None, None, None)
     else:
-        save_state(user_name, role_info, out, model_tokens,
+        save_state(token, user_name, role_info, out, model_tokens,
                    model_state, out_pre, mtp, msp)
     return return_success()
 
@@ -311,9 +329,10 @@ def chat_tamper():
     user_name = flask.request.values.get('user_name')
     char_name = flask.request.values.get('character_name')
     message = flask.request.values.get('message')
+    token = flask.request.values.get('token')
     if not char_name or not message:
         return return_error('关键参数为空')
-    save_data = load_state(user_name, char_name)
+    save_data = load_state(token, user_name, char_name)
     if not save_data:
         return return_error('尚未加载角色')
     if not save_data['model_tokens_pre']:
@@ -324,21 +343,22 @@ def chat_tamper():
     model = get_model()
     out, model_tokens, model_state = model.run_rnn(copy.deepcopy(
         save_data['model_tokens_pre']), copy.deepcopy(save_data['model_state_pre']), model.pipeline.encode(new))
-    save_state(user_name, role_info, out, model_tokens, model_state,
+    save_state(token, user_name, role_info, out, model_tokens, model_state,
                save_data['out_pre'], save_data['model_tokens_pre'], save_data['model_state_pre'])
     return return_success()
 
-def gen_msg(chat_param, out_pre, model_tokens_pre, model_state_pre, user_name, role_info: RoleInfo):
+def gen_msg(token, chat_param, out_pre, model_tokens_pre, model_state_pre, user_name, role_info: RoleInfo):
     c_model_tokens_pre = copy.deepcopy(model_tokens_pre)
     c_model_state_pre = copy.deepcopy(model_state_pre)
     model = get_model()
-    new_reply, out, model_tokens, model_state = model.get_reply(
-        model_tokens_pre, model_state_pre, out_pre, chat_param)
+    for new_reply, out, model_tokens, model_state in model.get_reply(
+        model_tokens_pre, model_state_pre, out_pre, chat_param):
+        yield new_reply
     role_info.chatbot[-1][1] = new_reply
-    save_state(user_name, role_info, out, model_tokens, model_state,
+    save_state(token, user_name, role_info, out, model_tokens, model_state,
                out_pre, c_model_tokens_pre, c_model_state_pre)
     save_log(user_name, role_info)
-    return new_reply
+    # return new_reply
 
 def get_init_prompt(role_info: RoleInfo, no_greeting=False):
     em = role_info.example_message.replace(
@@ -363,8 +383,8 @@ def get_init_prompt(role_info: RoleInfo, no_greeting=False):
             init_prompt += f"{role_info.bot}: {role_info.greeting}\n\n"
     return init_prompt
 
-def save_state(user_name, role_info: RoleInfo, out, model_tokens, model_state, out_pre=None, model_tokens_pre=None, model_state_pre=None):
-    prefix = get_dir_prefix()
+def save_state(token, user_name, role_info: RoleInfo, out, model_tokens, model_state, out_pre=None, model_tokens_pre=None, model_state_pre=None):
+    prefix = get_dir_prefix(token)
     data = {
         "out": out,
         "model_tokens": model_tokens,
@@ -377,8 +397,8 @@ def save_state(user_name, role_info: RoleInfo, out, model_tokens, model_state, o
     with open(f"{prefix}save/{user_name}/{role_info.bot_chat}.sav", 'wb') as f:
         pickle.dump(data, f)
 
-def load_state(user_name, char_name):
-    prefix = get_dir_prefix()
+def load_state(token, user_name, char_name):
+    prefix = get_dir_prefix(token)
     save_path = f'{prefix}save/{user_name}/{char_name}.sav'
     if not os.path.exists(save_path):
         return False
@@ -392,8 +412,8 @@ def save_log(user_name, role_info: RoleInfo):
     with open(f'log/{user_name}/{role_info.bot_chat}/{role_info.log_hash}.json', 'w', encoding='utf-8') as f:
         json.dump(dict_list, f, ensure_ascii=False, indent=2)
 
-def save_init_state(user_name, role_info: RoleInfo, out, model_tokens, model_state):
-    prefix = get_dir_prefix()
+def save_init_state(token, user_name, role_info: RoleInfo, out, model_tokens, model_state):
+    prefix = get_dir_prefix(token)
     save_path = f"{prefix}/chars/{user_name}/init_state/{role_info.bot_chat}.sav"
     data = {
         "out": out,
@@ -403,11 +423,11 @@ def save_init_state(user_name, role_info: RoleInfo, out, model_tokens, model_sta
     with open(save_path, 'wb') as f:
         pickle.dump(data, f)
 
-def get_init_state(user_name, role_info: RoleInfo):
+def get_init_state(token, user_name, role_info: RoleInfo):
     out = ''
     model_tokens = []
     model_state = None
-    prefix = get_dir_prefix()
+    prefix = get_dir_prefix(token)
     save_file = f"{prefix}chars/{user_name}/init_state/{role_info.bot_chat}.sav"
     if os.path.exists(save_file):
         with open(save_file, 'rb') as f:
@@ -420,12 +440,11 @@ def get_init_state(user_name, role_info: RoleInfo):
         model = get_model()
         out, model_tokens, model_state = model.run_rnn(
             model_tokens, model_state, model.pipeline.encode(init_prompt))
-        save_init_state(user_name, role_info, out, model_tokens, model_state)
+        save_init_state(token, user_name, role_info, out, model_tokens, model_state)
     return out, model_tokens, model_state
 
-def get_dir_prefix():
+def get_dir_prefix(token):
     prefix = './'
-    token = flask.request.values.get('token')
     if token[0:4] == 'tmp-':
         prefix = './tmp/'
     return prefix

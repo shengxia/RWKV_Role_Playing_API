@@ -28,12 +28,12 @@ poetry install
 
 ### 启动：
 ```sh
-python api.py --listen --model model/path
+python api.py --model model/path
 ```
 
 以下是一个例子: 
 ```sh
-python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx4096
+python api.py --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx4096
 ```
 各种启动参数解释如下：
 
@@ -358,6 +358,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 |  200   | 请求成功 |
 |  400   |   错误   |
 
+***Remark***
+
+目前这个接口让我给整成了流式输出（SSE模式），回头我还得再开个非流式输出的。
+
 ### 重说
 
 ***URL***
@@ -399,6 +403,10 @@ python api.py --listen --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx409
 | :----: | :------: |
 |  200   | 请求成功 |
 |  400   |   错误   |
+
+***Remark***
+
+目前这个接口让我给整成了流式输出（SSE模式），回头我还得再开个非流式输出的。
 
 ### 重置
 
