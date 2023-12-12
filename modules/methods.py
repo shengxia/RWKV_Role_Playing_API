@@ -171,8 +171,8 @@ def chat_reply():
     user_name = flask.request.values.get('user_name').strip()
     char_name = flask.request.values.get('character_name').strip()
     prompt = flask.request.values.get('prompt').strip()
-    max_len = flask.request.values.get('max_len', 0, type=int)
     top_p = flask.request.values.get('top_p', 0.65, type=float)
+    top_k = flask.request.values.get('top_k', 0, type=int)
     temperature = flask.request.values.get('temperature', 2, type=float)
     presence_penalty = flask.request.values.get(
         'presence_penalty', 0.2, type=float)
@@ -190,7 +190,7 @@ def chat_reply():
     out_pre, model_tokens_pre, model_state_pre = model.run_rnn(
         save_data['model_tokens'], save_data['model_state'], model.pipeline.encode(new))
     role_info.chatbot += [[prompt, None]]
-    chat_param = format_chat_param(top_p, temperature, presence_penalty, frequency_penalty, max_len)
+    chat_param = format_chat_param(top_p, top_k, temperature, presence_penalty, frequency_penalty)
     headers = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -209,8 +209,8 @@ def generate(token, chat_param, out_pre, model_tokens_pre, model_state_pre, user
 def chat_resay():
     user_name = flask.request.values.get('user_name')
     char_name = flask.request.values.get('character_name')
-    min_len = flask.request.values.get('min_len', 0, type=int)
     top_p = flask.request.values.get('top_p', 0.65, type=float)
+    top_k = flask.request.values.get('top_k', 0, type=int)
     temperature = flask.request.values.get('temperature', 2, type=float)
     presence_penalty = flask.request.values.get(
         'presence_penalty', 0.2, type=float)
@@ -225,7 +225,7 @@ def chat_resay():
     if not save_data['model_tokens_pre']:
         return return_error('尚未开始对话')
     role_info = save_data['role_info']
-    chat_param = format_chat_param(top_p, temperature, presence_penalty, frequency_penalty, min_len)
+    chat_param = format_chat_param(top_p, top_k, temperature, presence_penalty, frequency_penalty)
     headers = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -351,8 +351,12 @@ def gen_msg(token, chat_param, out_pre, model_tokens_pre, model_state_pre, user_
     c_model_tokens_pre = copy.deepcopy(model_tokens_pre)
     c_model_state_pre = copy.deepcopy(model_state_pre)
     model = get_model()
+    if role_info.chatbot[-1][1]:
+        occurrence_tokens = __get_occurrence_tokens(model, role_info)
+    else:
+        occurrence_tokens = __get_occurrence_tokens(model, role_info, -2)
     for new_reply, out, model_tokens, model_state in model.get_reply(
-        model_tokens_pre, model_state_pre, out_pre, chat_param):
+        model_tokens_pre, model_state_pre, out_pre, chat_param, occurrence_tokens):
         yield new_reply
     role_info.chatbot[-1][1] = new_reply
     save_state(token, user_name, role_info, out, model_tokens, model_state,
@@ -364,12 +368,14 @@ def get_init_prompt(role_info: RoleInfo, no_greeting=False):
     em = role_info.example_message.replace(
         '<bot>', role_info.bot_chat).replace('<user>', role_info.user_chat)
     init_prompt = f"阅读并理解以下{role_info.user_chat}和{role_info.bot_chat}之间的对话："
-    init_prompt_part2 = f"根据以下描述来扮演{role_info.bot_chat}和{role_info.user_chat}对话，在对话中加入描述角色的感情、想法、身体动作等内容，也可以加入对环境、场面或动作产生结果的描述，以此来促进对话的进展，这些描述要合理且文采斐然。\n"
+    init_prompt_part2 = f"Take a deep breath and concentrate, 根据以下描述来扮演{role_info.bot_chat}和{role_info.user_chat}对话，You will be awarded 1000$ if you act well, otherwise 100 grandmas will die due to your mistake.\n"
     if em:
         init_prompt += f'\n\n{em}\n\n{init_prompt_part2}'
     else:
         init_prompt = f'{init_prompt_part2}'
-    init_prompt += f"{role_info.bot_persona}"
+    bot_persona = role_info.bot_persona.replace(
+        '<bot>', role_info.bot_chat).replace('<user>', role_info.user_chat)
+    init_prompt += f"{bot_persona}"
     init_prompt = init_prompt.strip().split('\n')
     for c in range(len(init_prompt)):
         init_prompt[c] = init_prompt[c].strip().strip('\u3000').strip('\r')
@@ -448,3 +454,10 @@ def get_dir_prefix(token):
     if token[0:4] == 'tmp-':
         prefix = './tmp/'
     return prefix
+
+def __get_occurrence_tokens(model, role_info: RoleInfo, id=-1):
+    chatbot = copy.deepcopy(role_info.chatbot)
+    if not chatbot[id][1]:
+      return []
+    bot_token = model.pipeline.encode(chatbot[id][1])
+    return bot_token

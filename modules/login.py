@@ -33,7 +33,7 @@ def login():
     os.makedirs(f"./chars/{user_name}/init_state", exist_ok=True)
     os.makedirs(f"./save/{user_name}", exist_ok=True)
     try:
-        copyfiles('./chars/*.json', f'./tmp/chars/{user_name}/')
+        copyfiles('./chars/*.json', f'./chars/{user_name}/')
     except:
         return return_error('登陆失败')
     data = {

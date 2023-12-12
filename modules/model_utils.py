@@ -2,19 +2,20 @@ import gc
 import torch
 from rwkv.utils import PIPELINE
 from rwkv.model import RWKV
+import random
 
 torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cuda.matmul.allow_tf32 = True
 
 
-def format_chat_param(top_p, temperature, presence_penalty, frequency_penalty, max_len=0):
+def format_chat_param(top_p, top_k, temperature, presence_penalty, frequency_penalty):
     chat_param = {
         'top_p': top_p,
+        'top_k': top_k,
         'temperature': temperature,
         'presence_penalty': presence_penalty,
-        'frequency_penalty': frequency_penalty,
-        'max_len': max_len
+        'frequency_penalty': frequency_penalty
     }
     return chat_param
 
@@ -54,36 +55,33 @@ class ModelUtils:
             out[model_tokens[-1]] = self.NEG_INF
         return out, model_tokens, model_state
 
-    def get_reply(self, model_tokens, model_state, out, chat_param):
+    def get_reply(self, model_tokens, model_state, out, chat_param, occurrence_tokens=[]):
         clear_cache()
         begin = len(model_tokens)
         out_last = begin
-        for i in range(1024):
-            if chat_param['max_len'] >0:
-                if i <= 0:
-                    nl_bias = self.NEG_INF
-                elif i <= chat_param['max_len']:
-                    nl_bias = (i - chat_param['max_len']) * 0.1
-                else:
-                    nl_bias = 0
-                out[self.DOUBLE_END_OF_LINE] += nl_bias
-            occurrence = {}
-            if out_last > 256:
-                tokens_chunk = model_tokens[(out_last - 256):]
+        occurrence = {}
+        for t in occurrence_tokens:
+            if t in self.AVOID_REPEAT_TOKENS:
+                continue
+            if t in occurrence:
+                occurrence[t] += 1
             else:
-                tokens_chunk = model_tokens[begin:]
-            for token in tokens_chunk:
-                if token in self.AVOID_REPEAT_TOKENS:
-                    continue
-                occurrence[token] = 1 + (occurrence[token] if token in occurrence else 0)
+                occurrence[t] = 1
+        for i in range(512):
             for n in occurrence:
                 out[n] -= (chat_param['presence_penalty'] + occurrence[n] * 
                            chat_param['frequency_penalty'])
             token = self.pipeline.sample_logits(
-                out, chat_param['temperature'], chat_param['top_p'])
+                out, chat_param['temperature'], chat_param['top_p'], chat_param['top_k'])
             out, model_tokens, model_state = self.run_rnn(
                 model_tokens, model_state, [token])
             out[self.END_OF_TEXT] = self.NEG_INF
+            for xxx in occurrence:
+                occurrence[xxx] *= 0.996
+            if token not in occurrence:
+                occurrence[token] = 1
+            else:
+                occurrence[token] += 1
             xxx = self.pipeline.decode(model_tokens[out_last:])
             if '\ufffd' not in xxx:  # avoid utf-8 display issues
                 out_last = begin + i + 1
