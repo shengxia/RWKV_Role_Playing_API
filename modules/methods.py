@@ -176,8 +176,6 @@ def chat_reply():
     temperature = flask.request.values.get('temperature', 2, type=float)
     presence_penalty = flask.request.values.get(
         'presence_penalty', 0.2, type=float)
-    frequency_penalty = flask.request.values.get(
-        'frequency_penalty', 0.2, type=float)
     if not prompt or not char_name:
         return return_error('关键参数为空')
     model = get_model()
@@ -190,7 +188,7 @@ def chat_reply():
     out_pre, model_tokens_pre, model_state_pre = model.run_rnn(
         save_data['model_tokens'], save_data['model_state'], model.pipeline.encode(new))
     role_info.chatbot += [[prompt, None]]
-    chat_param = format_chat_param(top_p, top_k, temperature, presence_penalty, frequency_penalty)
+    chat_param = format_chat_param(top_p, top_k, temperature, presence_penalty)
     headers = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -214,8 +212,6 @@ def chat_resay():
     temperature = flask.request.values.get('temperature', 2, type=float)
     presence_penalty = flask.request.values.get(
         'presence_penalty', 0.2, type=float)
-    frequency_penalty = flask.request.values.get(
-        'frequency_penalty', 0.2, type=float)
     if not char_name:
         return return_error('关键参数为空')
     token = flask.request.values.get('token')
@@ -225,7 +221,7 @@ def chat_resay():
     if not save_data['model_tokens_pre']:
         return return_error('尚未开始对话')
     role_info = save_data['role_info']
-    chat_param = format_chat_param(top_p, top_k, temperature, presence_penalty, frequency_penalty)
+    chat_param = format_chat_param(top_p, top_k, temperature, presence_penalty)
     headers = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -351,12 +347,8 @@ def gen_msg(token, chat_param, out_pre, model_tokens_pre, model_state_pre, user_
     c_model_tokens_pre = copy.deepcopy(model_tokens_pre)
     c_model_state_pre = copy.deepcopy(model_state_pre)
     model = get_model()
-    if role_info.chatbot[-1][1]:
-        occurrence_tokens = __get_occurrence_tokens(model, role_info)
-    else:
-        occurrence_tokens = __get_occurrence_tokens(model, role_info, -2)
     for new_reply, out, model_tokens, model_state in model.get_reply(
-        model_tokens_pre, model_state_pre, out_pre, chat_param, occurrence_tokens):
+        model_tokens_pre, model_state_pre, out_pre, chat_param):
         yield new_reply
     role_info.chatbot[-1][1] = new_reply
     save_state(token, user_name, role_info, out, model_tokens, model_state,
@@ -454,10 +446,3 @@ def get_dir_prefix(token):
     if token[0:4] == 'tmp-':
         prefix = './tmp/'
     return prefix
-
-def __get_occurrence_tokens(model, role_info: RoleInfo, id=-1):
-    chatbot = copy.deepcopy(role_info.chatbot)
-    if not chatbot[id][1]:
-      return []
-    bot_token = model.pipeline.encode(chatbot[id][1])
-    return bot_token

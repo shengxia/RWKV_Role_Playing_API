@@ -332,11 +332,9 @@ python api.py --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx4096
 |     user_name     |  是   |              用户名              | String |
 |  character_name   |  是   |             角色名称             | String |
 |      prompt       |  是   |          用户输入的内容          | String |
-|      max_len      |  否   | 最大回复长度，0为不控制，默认是0 | Number |
 |       top_p       |  否   |       top_p值，默认为0.65        | Number |
 |    temperature    |  否   |      temperature值，默认为2      | Number |
 | presence_penalty  |  否   |  presence_penalty值，默认为0.2   | Number |
-| frequency_penalty |  否   |  frequency_penalty值，默认为0.2  | Number |
 |       token       |  是   |      令牌，从登录接口中获取      | String |
 
 ***Return Example***
@@ -378,11 +376,9 @@ python api.py --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx4096
 | :---------------: | :---: | :------------------------------: | :----: |
 |     user_name     |  是   |              用户名              | String |
 |  character_name   |  是   |             角色名称             | String |
-|      max_len      |  否   | 最大回复长度，0为不控制，默认是0 | Number |
 |       top_p       |  否   |        top_p值，默认为0.6        | Number |
 |    temperature    |  否   |     temperature值，默认为1.8     | Number |
 | presence_penalty  |  否   |  presence_penalty值，默认为0.2   | Number |
-| frequency_penalty |  否   |  frequency_penalty值，默认为0.2  | Number |
 |       token       |  是   |      令牌，从登录接口中获取      | String |
 
 ***Return Example***
