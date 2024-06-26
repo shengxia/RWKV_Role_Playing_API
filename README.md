@@ -184,7 +184,7 @@ python api.py --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx4096
 		"bot": "小雪",
 		"greeting": "{看到你走了过来，欢快的向你跑了过来}哥哥，来和我聊聊天吧。",
 		"bot_persona": "你扮演小雪，是一个调皮可爱，美丽性感的女孩，是我的邻居。",
-		"example_message": "<user>: 我们来聊聊天吧。\n\n<bot>: {点了点头，微笑着看着你}好啊，<user>，我们聊点什么呢？\n\n<user>: 聊一些关于你的话题吧。\n\n<bot>: {心里非常高兴，但表面上还是保持着微笑}关于我的话题？<user>~你想要知道我的哪些事情呢？\n\n<user>:  我想知道你喜欢的人是谁。\n\n<bot>: {稍微愣了一下，随即露出了甜美的笑容}<user>~你问这个问题是不是很奇怪呀，你已经知道我喜欢的人是谁了。\n\n<user>:  是吗？我怎么不知道呢？\n\n<bot>: {心里有些失望，但仍然微笑着看着你}那好吧，我的答案是：我喜欢的人就是<user>啊，你虽然不像别人那样能力很强，但是却有着一颗温柔而善良的心，而且非常关心我。",
+		"example_message": "{{user}}: 我们来聊聊天吧。\n\n{{char}}: {点了点头，微笑着看着你}好啊，{{user}}，我们聊点什么呢？\n\n{{user}}: 聊一些关于你的话题吧。\n\n{{char}}: {心里非常高兴，但表面上还是保持着微笑}关于我的话题？{{user}}~你想要知道我的哪些事情呢？\n\n{{user}}:  我想知道你喜欢的人是谁。\n\n{{char}}: {稍微愣了一下，随即露出了甜美的笑容}{{user}}~你问这个问题是不是很奇怪呀，你已经知道我喜欢的人是谁了。\n\n{{user}}:  是吗？我怎么不知道呢？\n\n{{char}}: {心里有些失望，但仍然微笑着看着你}那好吧，我的答案是：我喜欢的人就是{{user}}啊，你虽然不像别人那样能力很强，但是却有着一颗温柔而善良的心，而且非常关心我。",
 		"use_qa": false,
     "avatar": ""
 	},
@@ -332,8 +332,10 @@ python api.py --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx4096
 |     user_name     |  是   |              用户名              | String |
 |  character_name   |  是   |             角色名称             | String |
 |      prompt       |  是   |          用户输入的内容          | String |
-|       top_p       |  否   |       top_p值，默认为0.65        | Number |
-|    temperature    |  否   |      temperature值，默认为2      | Number |
+|       tau         |  否   |       tau值，默认为3             | Number |
+|       rate        |  否   |       rate值，默认为0.1          | Number |
+|       min_p       |  否   |       min_p值，默认为0.05        | Number |
+|    temperature    |  否   |      temperature值，默认为1.2    | Number |
 | presence_penalty  |  否   |  presence_penalty值，默认为0.2   | Number |
 |       token       |  是   |      令牌，从登录接口中获取      | String |
 
@@ -376,8 +378,10 @@ python api.py --model model/RWKV-4-World-CHNtuned-3B-v1-20230625-ctx4096
 | :---------------: | :---: | :------------------------------: | :----: |
 |     user_name     |  是   |              用户名              | String |
 |  character_name   |  是   |             角色名称             | String |
-|       top_p       |  否   |        top_p值，默认为0.6        | Number |
-|    temperature    |  否   |     temperature值，默认为1.8     | Number |
+|       tau         |  否   |       tau值，默认为3             | Number |
+|       rate        |  否   |       rate值，默认为0.1          | Number |
+|       min_p       |  否   |       min_p值，默认为0.05        | Number |
+|    temperature    |  否   |      temperature值，默认为1.2    | Number |
 | presence_penalty  |  否   |  presence_penalty值，默认为0.2   | Number |
 |       token       |  是   |      令牌，从登录接口中获取      | String |
 

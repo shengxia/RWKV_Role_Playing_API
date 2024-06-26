@@ -2,16 +2,18 @@ import gc
 import torch
 from rwkv.utils import PIPELINE
 from rwkv.model import RWKV
+from modules.mirostat import Mirostat
 
 torch.backends.cudnn.benchmark = True
 torch.backends.cudnn.allow_tf32 = True
 torch.backends.cuda.matmul.allow_tf32 = True
 
 
-def format_chat_param(top_p, top_k, temperature, presence_penalty):
+def format_chat_param(tau, rate, min_p, temperature, presence_penalty):
     chat_param = {
-        'top_p': top_p,
-        'top_k': top_k,
+        'tau': tau,
+        'lr': rate,
+        'min_p': min_p,
         'temperature': temperature,
         'presence_penalty': presence_penalty
     }
@@ -58,19 +60,16 @@ class ModelUtils:
         begin = len(model_tokens)
         out_last = begin
         occurrence = {}
+        miro = Mirostat()
+        miro.set_param(chat_param['tau'], chat_param['lr'], 2 * chat_param['tau'])
         for i in range(512):
             for n in occurrence:
                 if out[n] > 0:
                     out[n] = out[n] / (1 + chat_param['presence_penalty'])
                 else:
                     out[n] = out[n] * (1 + chat_param['presence_penalty'])
-            token = self.pipeline.sample_logits(
-                out, chat_param['temperature'], chat_param['top_p'], chat_param['top_k'])
-            if token not in self.AVOID_REPEAT_TOKENS:
-                if token not in occurrence:
-                    occurrence[token] = 1
-                else:
-                    occurrence[token] += 1
+            token = miro.choise(out, chat_param['min_p'], chat_param['temperature'])
+            occurrence[token] = 1
             out, model_tokens, model_state = self.run_rnn(
                 model_tokens, model_state, [token])
             out[self.END_OF_TEXT] = self.NEG_INF

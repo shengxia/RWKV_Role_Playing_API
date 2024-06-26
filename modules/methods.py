@@ -171,9 +171,10 @@ def chat_reply():
     user_name = flask.request.values.get('user_name').strip()
     char_name = flask.request.values.get('character_name').strip()
     prompt = flask.request.values.get('prompt').strip()
-    top_p = flask.request.values.get('top_p', 0.65, type=float)
-    top_k = flask.request.values.get('top_k', 0, type=int)
-    temperature = flask.request.values.get('temperature', 2, type=float)
+    tau = flask.request.values.get('tau', 3, type=float)
+    rate = flask.request.values.get('rate', 0.1, type=float)
+    min_p = flask.request.values.get('min_p', 0.05, type=float)
+    temperature = flask.request.values.get('temperature', 1.2, type=float)
     presence_penalty = flask.request.values.get(
         'presence_penalty', 0.2, type=float)
     if not prompt or not char_name:
@@ -188,7 +189,7 @@ def chat_reply():
     out_pre, model_tokens_pre, model_state_pre = model.run_rnn(
         save_data['model_tokens'], save_data['model_state'], model.pipeline.encode(new))
     role_info.chatbot += [[prompt, None]]
-    chat_param = format_chat_param(top_p, top_k, temperature, presence_penalty)
+    chat_param = format_chat_param(tau, rate, min_p, temperature, presence_penalty)
     headers = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -207,9 +208,10 @@ def generate(token, chat_param, out_pre, model_tokens_pre, model_state_pre, user
 def chat_resay():
     user_name = flask.request.values.get('user_name')
     char_name = flask.request.values.get('character_name')
-    top_p = flask.request.values.get('top_p', 0.65, type=float)
-    top_k = flask.request.values.get('top_k', 0, type=int)
-    temperature = flask.request.values.get('temperature', 2, type=float)
+    tau = flask.request.values.get('tau', 3, type=float)
+    rate = flask.request.values.get('rate', 0.1, type=float)
+    min_p = flask.request.values.get('min_p', 0.05, type=float)
+    temperature = flask.request.values.get('temperature', 1.2, type=float)
     presence_penalty = flask.request.values.get(
         'presence_penalty', 0.2, type=float)
     if not char_name:
@@ -221,7 +223,7 @@ def chat_resay():
     if not save_data['model_tokens_pre']:
         return return_error('尚未开始对话')
     role_info = save_data['role_info']
-    chat_param = format_chat_param(top_p, top_k, temperature, presence_penalty)
+    chat_param = format_chat_param(tau, rate, min_p, temperature, presence_penalty)
     headers = {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -357,21 +359,14 @@ def gen_msg(token, chat_param, out_pre, model_tokens_pre, model_state_pre, user_
     # return new_reply
 
 def get_init_prompt(role_info: RoleInfo, no_greeting=False):
+    init_prompt = ''
     em = role_info.example_message.replace(
-        '<bot>', role_info.bot_chat).replace('<user>', role_info.user_chat)
-    init_prompt = f"阅读并理解以下{role_info.user_chat}和{role_info.bot_chat}之间的对话："
-    init_prompt_part2 = f"Take a deep breath and concentrate, 根据以下描述来扮演{role_info.bot_chat}和{role_info.user_chat}对话，You will be awarded 1000$ if you act well, otherwise 100 grandmas will die due to your mistake.\n"
+        '{{char}}', role_info.bot_chat).replace('{{user}}', role_info.user_chat)
     if em:
-        init_prompt += f'\n\n{em}\n\n{init_prompt_part2}'
-    else:
-        init_prompt = f'{init_prompt_part2}'
+        init_prompt += f'{em}\n\n'
     bot_persona = role_info.bot_persona.replace(
-        '<bot>', role_info.bot_chat).replace('<user>', role_info.user_chat)
+        '{{char}}', role_info.bot_chat).replace('{{user}}', role_info.user_chat)
     init_prompt += f"{bot_persona}"
-    init_prompt = init_prompt.strip().split('\n')
-    for c in range(len(init_prompt)):
-        init_prompt[c] = init_prompt[c].strip().strip('\u3000').strip('\r')
-    init_prompt = '\n'.join(init_prompt).strip() + '\n\n'
     init_prompt = init_prompt.strip().split('\n')
     for c in range(len(init_prompt)):
         init_prompt[c] = init_prompt[c].strip().strip('\u3000').strip('\r')
